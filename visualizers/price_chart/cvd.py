@@ -1,0 +1,34 @@
+import plotly.graph_objects as go
+from visualizers.price_chart.base import PriceChartVisualizer
+from analyzers.volume_delta.model import VolumeDelta
+
+class CVDVisualizer(PriceChartVisualizer):
+    def __init__(self, cvd_analyzer: VolumeDelta):
+        self.cvd_analyzer = cvd_analyzer
+
+        self.scatter = go.Scattergl(
+            x=[],
+            y=[],
+            mode="lines",
+            name="CVD",
+            yaxis="y2",
+            line=dict(color="gray", width=1),
+        )
+
+    def get_traces(self):
+        combined = list(self.cvd_analyzer.content)
+
+        x_vals = [r.time for r in combined]
+        y_vals = [float(r.value) for r in combined]
+
+        colors = [
+            "rgba(0, 153, 76, 1)" if y >= 0 else "rgba(200, 39, 40, 1)"
+            for y in y_vals
+        ]
+
+        self.scatter.x = x_vals
+        self.scatter.y = y_vals
+        self.scatter.mode = "lines+markers"
+        self.scatter.marker = dict(color=colors)
+
+        return self.scatter
