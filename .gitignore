@@ -56,3 +56,5 @@ Thumbs.db
 # =========================
 *.parquet
 *.csv
+
+.session_reports/

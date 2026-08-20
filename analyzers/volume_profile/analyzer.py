@@ -64,7 +64,7 @@ class VolumeProfileAnalyzer(Resource, TimeframeSubscriber):
         else:
             vol.sell_volume += msg.quantity
 
-    def on_candle_close(self):
+    def on_candle_close(self, next_time: int | None = None):
         m = self.model
 
         deprecated = None

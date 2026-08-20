@@ -1,5 +1,6 @@
 from analyzers.volume_delta.base_analyzer import BaseVolumeDeltaAnalyzer
 from analyzers.utils import OscillatorRecord
+from decimal import Decimal
 
 class VolumeDeltaAnalyzer(BaseVolumeDeltaAnalyzer):
     def __init__(self, big_trades=False, visualize=True):
@@ -11,5 +12,8 @@ class VolumeDeltaAnalyzer(BaseVolumeDeltaAnalyzer):
             return VolumeDeltaVisualizer(self.model)
         return None
 
-    def new_current_record(self):
-        return None
+    def new_current_record(self, next_time=None):
+        return OscillatorRecord(
+            time=next_time if next_time is not None else 0,
+            value=Decimal(0)
+        )

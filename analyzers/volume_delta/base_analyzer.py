@@ -27,6 +27,7 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
     def reset(self):
         self.model.history.clear()
         self.model.current = None
+        self.new_starting_value = None
 
         if self.big_trades:
             self.big_trades_analyzer.reset()
@@ -46,11 +47,11 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
         delta = msg.quantity * msg.side.value
         self.model.current.value += delta
 
-    def on_candle_close(self):
+    def on_candle_close(self, next_time: int | None = None):
         if self.model.current is not None:
             self.model.history.append(self.model.current)
 
-        self.model.current = self.new_current_record()
+        self.model.current = self.new_current_record(next_time)
 
         if self.big_trades:
             self.big_trades_analyzer.close_record()
@@ -58,5 +59,5 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
     def get_visualizer(self):
         raise NotImplementedError("get_visualizer must be implemented")
     
-    def new_current_record(self):
+    def new_current_record(self, next_time: int | None = None):
         raise NotImplementedError("new_current_record must be implemented")

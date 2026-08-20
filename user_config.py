@@ -40,9 +40,6 @@ def setup_resources(resources: dict):
 # --------------------------
 
 def get_essentials():
-    # 🐢 Replay speed (0-10)
-    replay_speed = 5.4
-
     # 🚨 Starting balance (USD)
     starting_balance = 100_000
 
@@ -66,4 +63,4 @@ def get_essentials():
 
     visualizers = setup_resources(resources)
 
-    return replay_speed, starting_balance, strategy, resources, visualizers
+    return starting_balance, strategy, resources, visualizers

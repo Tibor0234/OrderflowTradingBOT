@@ -48,12 +48,11 @@ class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
             sub.on_timeframe_update(msg)
 
         if msg.time - self.model.current.time >= self.candle_ms:
+            next_open = self.model.current.time + self.candle_ms
             self.model.history.append(self.model.current)
 
             for sub in self.subscribers:
-                sub.on_candle_close()
-
-            next_open = self.model.current.time + self.candle_ms
+                sub.on_candle_close(next_open)
 
             self.model.current = Candle(
                 time=next_open,

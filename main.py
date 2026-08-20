@@ -1,18 +1,23 @@
-from pathlib import Path
 import asyncio
 import threading
 from decimal import Decimal
-import dotenv
 import os
+
+import dotenv
 import psycopg
 
 # ---- Market data & managers ----
-from market_feed.feed import PostgresMarketFeed
-from data_managers.open_interest.manager import OpenInterestManager, OpenInterestManagerSubscriber
-from data_managers.order_book.manager import OrderBookManager, OrderBookManagerSubscriber
-from data_managers.trade.manager import TradeManager, TradeManagerSubscriber
-from data_managers.context.manager import ContextManager, ContextManagerSubscriber
-from data_managers.news.manager import NewsManager, NewsManagerSubscriber
+from market_feed.feed import MarketFeed
+from data_managers.open_interest.manager import OpenInterestManager
+from data_managers.open_interest.subscriber import OpenInterestManagerSubscriber
+from data_managers.order_book.manager import OrderBookManager
+from data_managers.order_book.subscriber import OrderBookManagerSubscriber
+from data_managers.trade.manager import TradeManager
+from data_managers.trade.subscriber import TradeManagerSubscriber
+from data_managers.context.manager import ContextManager
+from data_managers.context.subscriber import ContextManagerSubscriber
+from data_managers.news.manager import NewsManager
+from data_managers.news.subscriber import NewsManagerSubscriber
 
 # ---- Trading & session ----
 from trading.execution.position_manager import PositionManager
@@ -39,7 +44,7 @@ from user_config import get_essentials
 # ------------------- MAIN -------------------
 if __name__ == "__main__":
     # ---- Essentials ----
-    replay_speed, starting_balance, strategy, resources, visualizers = get_essentials()
+    starting_balance, strategy, resources, visualizers = get_essentials()
 
     dotenv.load_dotenv()
 
@@ -79,14 +84,13 @@ if __name__ == "__main__":
     conn = psycopg.connect(os.getenv('POSTGRES_URL'))
 
     # ---- Market feed ----
-    market_feed = PostgresMarketFeed(
+    market_feed = MarketFeed(
         conn,
         open_interest_manager,
         orderbook_manager,
         trade_manager,
         news_manager,
-        context_manager,
-        replay_speed
+        context_manager
     )
 
     # ---- Setup resources ----

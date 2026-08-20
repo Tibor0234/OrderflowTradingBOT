@@ -1,4 +1,3 @@
-import asyncio
 from psycopg import Connection
 
 from data_managers.context.manager import ContextManager
@@ -10,10 +9,26 @@ from data_managers.trade.manager import TradeManager
 from global_services.events.bus import EventBus
 from global_services.events.utils import EventBusMsgType
 
-from market_feed.utils import EventType, SessionCounter
+from market_feed.session_pair_manager import SessionPairManager
+from market_feed.database_generator_factory import DatabaseGeneratorFactory
+from market_feed.source_coordinator import SourceCoordinator
+from market_feed.event_forwarder import EventForwarder
 
 
-class PostgresMarketFeed:
+class MarketFeed:
+    """
+    Egy Postgres adatbázisból történő market feed replay.
+    
+    Koordinálja a session paireket, adatforrásokat és az event forwarding-ot.
+    
+    A replay egysége egy session_pair:
+      - session 1 -> BTC
+      - session 1 -> ETH
+      - session 2 -> BTC
+      - session 2 -> ETH
+    
+    Ezek egymás után kerülnek feldolgozásra.
+    """
 
     def __init__(
         self,
@@ -22,262 +37,80 @@ class PostgresMarketFeed:
         orderbook_manager: OrderBookManager,
         trade_manager: TradeManager,
         news_manager: NewsManager,
-        context_manager: ContextManager,
-        replay_speed=10
+        context_manager: ContextManager
     ):
-        self.conn = conn
-
-        self.sleep_time = 10 ** -replay_speed
-
-        self.open_interest_manager = open_interest_manager
-        self.orderbook_manager = orderbook_manager
-        self.trade_manager = trade_manager
-        self.news_manager = news_manager
-        self.context_manager = context_manager
-
-        self.sessions = self.load_sessions()
-        self.session_counter = SessionCounter(
-            current=0,
-            total=len(self.sessions)
+        self.session_pair_manager = SessionPairManager(conn)
+        
+        generator_factory = DatabaseGeneratorFactory(conn)
+        self.source_coordinator = SourceCoordinator(generator_factory)
+        
+        self.event_forwarder = EventForwarder(
+            open_interest_manager,
+            orderbook_manager,
+            trade_manager,
+            context_manager,
+            news_manager,
         )
 
-
-    def load_sessions(self):
-
-        with self.conn.cursor() as cursor:
-
-            cursor.execute("""
-                SELECT id
-                FROM sessions
-                ORDER BY created_at
-            """)
-
-            return [
-                row[0]
-                for row in cursor.fetchall()
-            ]
-
-
-    def get_next_session(self):
-
-        if self.session_counter.current >= self.session_counter.total:
-            return None
-
-        session = self.sessions[self.session_counter.current]
-
-        self.session_counter.current += 1
-
-        return session
-
+    @property
+    def session_counter(self):
+        """
+        Hozzáférést biztosít a session counter objektumhoz a dashboard számára.
+        
+        Visszaadja a SessionCounter objektumot, amely tartalmazza:
+        - current: aktuális session pár indexe (0-based)
+        - total: összes session pár száma
+        
+        Használat:
+            current = market_feed.session_counter.current
+            total = market_feed.session_counter.total
+        """
+        return self.session_pair_manager.get_counter()
 
     async def run(self):
-
+        """
+        Főprogram: iterálja az összes session pairt és streameli az adatokat.
+        """
         while True:
+            session_pair = self.session_pair_manager.get_next()
 
-            session_id = self.get_next_session()
-
-            if session_id is None:
+            if session_pair is None:
                 print("Process ended.")
-
-                EventBus().emit(
-                    EventBusMsgType.PROCESS_END
-                )
-
+                EventBus().emit(EventBusMsgType.PROCESS_END)
                 return
 
+            await self._replay_session_pair(session_pair)
 
-            print(
-                "Session",
-                session_id
-            )
+    async def _replay_session_pair(self, session_pair):
+        """Egy session pair összes adatát replaye."""
+        session_pair_id, session_id, pair, created_at = session_pair
 
-            EventBus().emit(
-                EventBusMsgType.SESSION_START
-            )
-
-
-            sources = self.get_sources(session_id)
-
-
-            while True:
-
-                active = {
-                    k: v
-                    for k, v in sources.items()
-                    if v["item"] is not None
-                }
-
-
-                if not active:
-                    break
-
-
-                selected_key = min(
-                    active,
-                    key=lambda k: self.extract_ts(
-                        active[k]["item"]
-                    )
-                )
-
-
-                item = sources[selected_key]["item"]
-
-
-                self.forward_message(
-                    selected_key,
-                    item
-                )
-
-
-                try:
-
-                    sources[selected_key]["item"] = next(
-                        sources[selected_key]["generator"]
-                    )
-
-                except StopIteration:
-
-                    sources[selected_key]["item"] = None
-
-
-                await asyncio.sleep(
-                    self.sleep_time
-                )
-
-
-    def get_sources(self, session_id):
-
-        sources = {}
-
-
-        generators = {
-            EventType.TR: self.trade_generator(session_id),
-            EventType.OB: self.orderbook_generator(session_id),
-            EventType.OI: self.oi_generator(session_id),
-            EventType.CTX: self.context_generator(session_id),
-            EventType.NWS: self.news_generator(session_id),
-        }
-
-
-        for event_type, generator in generators.items():
-
-            try:
-
-                sources[event_type] = {
-                    "generator": generator,
-                    "item": next(generator)
-                }
-
-            except StopIteration:
-
-                pass
-
-
-        return sources
-
-
-
-    def trade_generator(self, session_id):
-
-        cursor = self.conn.cursor(
-            name=f"trade_cursor_{session_id}"
+        print(
+            pair.upper(),
+            "session pair",
+            session_pair_id,
+            "| session",
+            session_id
         )
 
+        EventBus().emit(EventBusMsgType.SESSION_START)
 
-        cursor.execute("""
-            SELECT raw
-            FROM trades
-            WHERE session_pair_id IN (
-                SELECT id
-                FROM session_pairs
-                WHERE session_id = %s
-            )
-            ORDER BY timestamp
-        """, (session_id,))
+        sources = self.source_coordinator.initialize_sources(session_pair_id)
 
+        while True:
+            active_sources = self.source_coordinator.get_active_sources(sources)
 
-        for row in cursor:
+            if not active_sources:
+                break
 
-            yield row[0]
-
-
-
-    def orderbook_generator(self, session_id):
-
-        cursor = self.conn.cursor(
-            name=f"ob_cursor_{session_id}"
-        )
-
-
-        cursor.execute("""
-            SELECT raw
-            FROM orderbooks
-            WHERE session_pair_id IN (
-                SELECT id
-                FROM session_pairs
-                WHERE session_id = %s
-            )
-            ORDER BY timestamp
-        """, (session_id,))
-
-
-        for row in cursor:
-
-            yield row[0]
-
-
-
-    def oi_generator(self, session_id):
-        return iter([])
-
-
-    def context_generator(self, session_id):
-        return iter([])
-
-
-    def news_generator(self, session_id):
-        return iter([])
-
-
-
-    def forward_message(self, event_type, message):
-
-        if event_type == EventType.OI:
-
-            self.open_interest_manager.forward_message(
-                message
+            selected_event_type = self.source_coordinator.select_next_source(
+                active_sources
             )
 
-        elif event_type == EventType.OB:
+            item = sources[selected_event_type]["item"]
 
-            self.orderbook_manager.forward_message(
-                message
-            )
+            self.event_forwarder.forward(selected_event_type, item)
 
-        elif event_type == EventType.TR:
+            self.source_coordinator.advance_source(sources, selected_event_type)
 
-            self.trade_manager.forward_message(
-                message
-            )
-
-        elif event_type == EventType.CTX:
-
-            self.context_manager.forward_message(
-                message
-            )
-
-        elif event_type == EventType.NWS:
-
-            self.news_manager.forward_message(
-                message
-            )
-
-
-
-    def extract_ts(self, item):
-
-        return (
-            item.get("T")
-            or item.get("time")
-            or item.get("E")
-        )
+        EventBus().emit(EventBusMsgType.SESSION_END)

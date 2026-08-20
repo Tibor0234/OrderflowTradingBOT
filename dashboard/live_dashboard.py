@@ -11,6 +11,7 @@ from visualizers.market_entity.order import OrderVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 from market_feed.utils import SessionCounter
+from dashboard.session_report import SessionReport, SessionReportSnapshot
 
 class LiveDashboard:
     def __init__(self, title):
@@ -41,7 +42,67 @@ class LiveDashboard:
 
         self.app.layout = self.layout.build()
 
+        self.session_report = SessionReport(self._build_report_snapshot)
         self._register_callbacks()
+
+    def _build_dashboard_snapshot(self):
+        figures = {
+            "Price chart": self.chart_renderer.build_price_chart(
+                [self.trade_visualizer, self.order_visualizer],
+                self.price_visualizers
+            ),
+            "Last week chart": self.chart_renderer.build_context_chart(
+                self.context_visualizers[ContextPeriod.LAST_WEEK]
+            ),
+            "Last day chart": self.chart_renderer.build_context_chart(
+                self.context_visualizers[ContextPeriod.LAST_DAY]
+            ),
+            "Session equity curve": self.chart_renderer.build_equity_curve(
+                self.session_equity_visualizer
+            ),
+            "Cumulative equity curve": self.chart_renderer.build_equity_curve(
+                self.cumulative_equity_visualizer
+            )
+        }
+
+        panels = {
+            "Session": self.panel_content_renderer.render_session_panel(
+                self.session_counter
+            ),
+            "Trades": self.panel_content_renderer.render_execution_panel(
+                self.trade_visualizer
+            ),
+            "Orders": self.panel_content_renderer.render_execution_panel(
+                self.order_visualizer
+            ),
+            "Session statistics": self.panel_content_renderer.render_stats_panel(
+                self.session_statistics_visualizer
+            ),
+            "Cumulative statistics": self.panel_content_renderer.render_stats_panel(
+                self.cumulative_statistics_visualizer
+            )
+        }
+
+        session_number = None
+        if self.session_counter:
+            session_number = self.session_counter.current
+
+        return SessionReportSnapshot(session_number, figures, panels)
+
+    def _build_report_snapshot(self):
+        snapshot = self._build_dashboard_snapshot()
+        return SessionReportSnapshot(
+            session_number=snapshot.session_number,
+            figures={
+                "Session equity curve": snapshot.figures["Session equity curve"],
+                "Cumulative equity curve": snapshot.figures["Cumulative equity curve"]
+            },
+            panels={
+                "Session": snapshot.panels["Session"],
+                "Session statistics": snapshot.panels["Session statistics"],
+                "Cumulative statistics": snapshot.panels["Cumulative statistics"]
+            }
+        )
 
     def _register_callbacks(self):
 
@@ -59,59 +120,8 @@ class LiveDashboard:
             Input("trigger-check", "n_intervals")
         )
         def update(_):
-            price_chart = self.chart_renderer.build_price_chart(
-                [self.trade_visualizer, self.order_visualizer],
-                self.price_visualizers
-            )
-
-            last_week_chart = self.chart_renderer.build_context_chart(
-                self.context_visualizers[ContextPeriod.LAST_WEEK]
-            )
-
-            last_day_chart = self.chart_renderer.build_context_chart(
-                self.context_visualizers[ContextPeriod.LAST_DAY]
-            )
-
-            session_equity = self.chart_renderer.build_equity_curve(
-                self.session_equity_visualizer
-            )
-
-            cumulative_equity = self.chart_renderer.build_equity_curve(
-                self.cumulative_equity_visualizer
-            )
-
-            session_panel_content = self.panel_content_renderer.render_session_panel(
-                self.session_counter
-            )
-
-            trade_panel_content = self.panel_content_renderer.render_execution_panel(
-                self.trade_visualizer
-            )
-
-            order_panel_content = self.panel_content_renderer.render_execution_panel(
-                self.order_visualizer
-            )
-
-            session_stats_content = self.panel_content_renderer.render_stats_panel(
-                self.session_statistics_visualizer
-            )
-
-            cumulative_stats_content = self.panel_content_renderer.render_stats_panel(
-                self.cumulative_statistics_visualizer
-            )
-
-            return (
-                price_chart,
-                last_week_chart,
-                last_day_chart,
-                session_equity,
-                cumulative_equity,
-                session_panel_content,
-                trade_panel_content,
-                order_panel_content,
-                session_stats_content,
-                cumulative_stats_content
-            )
+            snapshot = self._build_dashboard_snapshot()
+            return (*snapshot.figures.values(), *snapshot.panels.values())
 
     def add_price_chart_visualizer(self, visualizer: PriceChartVisualizer):
         self.price_visualizers.append(visualizer)

@@ -10,5 +10,5 @@ class TimeframeSubscriber(ABC):
         pass
 
     @abstractmethod
-    def on_candle_close(self):
+    def on_candle_close(self, next_time: int | None = None):
         pass

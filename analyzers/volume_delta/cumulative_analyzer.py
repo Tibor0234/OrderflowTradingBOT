@@ -11,5 +11,8 @@ class CVDAnalyzer(BaseVolumeDeltaAnalyzer):
             return CVDVisualizer(self.model)
         return None
 
-    def new_current_record(self):
-        self.new_starting_value = self.model.current.value
+    def new_current_record(self, next_time=None):
+        return OscillatorRecord(
+            time=next_time if next_time is not None else self.model.current.time,
+            value=self.model.current.value
+        )

@@ -9,6 +9,14 @@ from strategies.core.sequence_analyzers import SequenceAnalyzers
 from trading.execution.order_book import ExecutionOrderBook
 from trading.market_entities.utils import OrderType, Side
 from global_services.data.provider import DataProvider
+from analyzers.context_timeframe.model import ContextTimeframe
+from analyzers.context_volume_profile.model import ContextVolumeProfile
+from analyzers.microprice_deviation.model import MicropriceDeviation
+from analyzers.open_interest.model import OpenInterest
+from analyzers.order_book_imbalance.model import OrderBookImbalance
+from analyzers.timeframe.model import Timeframe
+from analyzers.volume_delta.model import VolumeDelta
+from analyzers.volume_profile.model import VolumeProfile
 
 class StrategyFramework(SequenceAnalyzers):
     def __init__(self, position_manager: PositionManager, session_context: SessionContext, execution_order_book: ExecutionOrderBook):
@@ -177,5 +185,26 @@ class StrategyFramework(SequenceAnalyzers):
 
     # resource queries
 
-    def get_resource(self, name: str):
+    def get_context_timeframe(self, name: str) -> ContextTimeframe:
+        return self.session_context.get_resource(name)
+
+    def get_context_volume_profile(self, name: str) -> ContextVolumeProfile:
+        return self.session_context.get_resource(name)
+
+    def get_microprice_deviation(self, name: str) -> MicropriceDeviation:
+        return self.session_context.get_resource(name)
+
+    def get_open_interest(self, name: str) -> OpenInterest:
+        return self.session_context.get_resource(name)
+
+    def get_order_book_imbalance(self, name: str) -> OrderBookImbalance:
+        return self.session_context.get_resource(name)
+
+    def get_timeframe(self, name: str) -> Timeframe:
+        return self.session_context.get_resource(name)
+
+    def get_volume_delta(self, name: str) -> VolumeDelta:
+        return self.session_context.get_resource(name)
+
+    def get_volume_profile(self, name: str) -> VolumeProfile:
         return self.session_context.get_resource(name)
