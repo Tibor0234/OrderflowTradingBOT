@@ -28,6 +28,7 @@ from data_analysis.statistics.cumulative import CumulativeStatistics
 from trading.execution.order_book import ExecutionOrderBook
 from sessions.context import SessionContext
 from strategies.core.framework import StrategyFramework
+from report_maker.generator import ReportGenerator
 
 # ---- Visualization ----
 from dashboard.live_dashboard import LiveDashboard
@@ -129,6 +130,11 @@ if __name__ == "__main__":
             dashboard.add_price_chart_visualizer(visualizer)
         elif isinstance(visualizer, ContextChartVisualizer):
             dashboard.add_context_chart_visualizer(visualizer)
+
+    # Reports
+    report_generator = ReportGenerator(strategy_name=strategy.__class__.__name__) \
+        .set_equity_curve_visualizer(session_equity_curve_visualizer) \
+        .set_statistics_visualizer(session_statistics_visualizer)
 
     # ---- Start market feed in background thread ----
     threading.Thread(

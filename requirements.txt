@@ -1,0 +1,5 @@
+python-dotenv
+psycopg[binary]
+plotly
+dash
+numpy

@@ -9,7 +9,6 @@ class TestStrategy(BaseStrategy):
         cvd_1m = self.fw.get_volume_delta("cvd_1m")
 
         if cvd_1m.current is not None:
-            print(cvd_1m.current.value)
 
             if cvd_1m.current.value > Decimal(0):
                 order = self.fw.place_market_order(
@@ -17,4 +16,3 @@ class TestStrategy(BaseStrategy):
                     value=1000,
                     leverage=10
                 )
-                print("order placed")

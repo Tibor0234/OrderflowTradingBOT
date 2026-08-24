@@ -11,7 +11,6 @@ from visualizers.market_entity.order import OrderVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 from market_feed.utils import SessionCounter
-from dashboard.session_report import SessionReport, SessionReportSnapshot
 
 class LiveDashboard:
     def __init__(self, title):
@@ -41,8 +40,6 @@ class LiveDashboard:
         self.cumulative_statistics_visualizer = None
 
         self.app.layout = self.layout.build()
-
-        self.session_report = SessionReport(self._build_report_snapshot)
         self._register_callbacks()
 
     def _build_dashboard_snapshot(self):
@@ -86,23 +83,8 @@ class LiveDashboard:
         session_number = None
         if self.session_counter:
             session_number = self.session_counter.current
+        return session_number, figures, panels
 
-        return SessionReportSnapshot(session_number, figures, panels)
-
-    def _build_report_snapshot(self):
-        snapshot = self._build_dashboard_snapshot()
-        return SessionReportSnapshot(
-            session_number=snapshot.session_number,
-            figures={
-                "Session equity curve": snapshot.figures["Session equity curve"],
-                "Cumulative equity curve": snapshot.figures["Cumulative equity curve"]
-            },
-            panels={
-                "Session": snapshot.panels["Session"],
-                "Session statistics": snapshot.panels["Session statistics"],
-                "Cumulative statistics": snapshot.panels["Cumulative statistics"]
-            }
-        )
 
     def _register_callbacks(self):
 
@@ -120,8 +102,8 @@ class LiveDashboard:
             Input("trigger-check", "n_intervals")
         )
         def update(_):
-            snapshot = self._build_dashboard_snapshot()
-            return (*snapshot.figures.values(), *snapshot.panels.values())
+            session_number, figures, panels = self._build_dashboard_snapshot()
+            return (*figures.values(), *panels.values())
 
     def add_price_chart_visualizer(self, visualizer: PriceChartVisualizer):
         self.price_visualizers.append(visualizer)
