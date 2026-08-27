@@ -13,6 +13,7 @@ from market_feed.session_pair_manager import SessionPairManager
 from market_feed.database_generator_factory import DatabaseGeneratorFactory
 from market_feed.source_coordinator import SourceCoordinator
 from market_feed.event_forwarder import EventForwarder
+from sessions.utils import InstrumentMetadata
 
 
 class MarketFeed:
@@ -41,8 +42,10 @@ class MarketFeed:
     ):
         self.session_pair_manager = SessionPairManager(conn)
         
-        generator_factory = DatabaseGeneratorFactory(conn)
-        self.source_coordinator = SourceCoordinator(generator_factory)
+        self.database_generator_factory = DatabaseGeneratorFactory(conn)
+        self.source_coordinator = SourceCoordinator(
+            self.database_generator_factory
+        )
         
         self.event_forwarder = EventForwarder(
             open_interest_manager,
@@ -93,7 +96,18 @@ class MarketFeed:
             session_id
         )
 
-        EventBus().emit(EventBusMsgType.SESSION_START)
+        metadata_row = self.database_generator_factory.instrument_metadata(
+            session_pair_id
+        )
+        instrument_metadata = (
+            InstrumentMetadata(*metadata_row)
+            if metadata_row is not None
+            else None
+        )
+        EventBus().emit(
+            EventBusMsgType.SESSION_START,
+            instrument_metadata=instrument_metadata
+        )
 
         sources = self.source_coordinator.initialize_sources(session_pair_id)
 

@@ -6,6 +6,9 @@ class SequenceAnalyzers:
         return len(sequence) >= length
 
     def get_monotonic_trend(self, sequence, source_name):
+        if not sequence:
+            return MonotonicTrend(False, 0, 0)
+
         if not hasattr(sequence[-1], source_name):
             raise AttributeError(f"{source_name} not found")
 
@@ -121,15 +124,17 @@ class SequenceAnalyzers:
         )
 
     def get_local_swings(self, sequence, source_name, direction, swing_length, length=None):
+        if not sequence or swing_length <= 0:
+            return []
+
         if length is None:
             length = len(sequence)
-        else:
-            sequence = sequence[-length:]
+        if length <= 0:
+            return []
+
+        sequence = sequence[-length:]
 
         n = len(sequence)
-
-        if n == 0:
-            return []
 
         swing_length = min(swing_length, (n - 1) // 2)
 
@@ -140,7 +145,7 @@ class SequenceAnalyzers:
         g = getattr
         cmp = (lambda a, b: a < b) if direction == -1 else (lambda a, b: a > b)
 
-        i = n - swing_length - 1
+        i = swing_length
 
         while i < n - swing_length:
             v = g(sequence[i], source_name)

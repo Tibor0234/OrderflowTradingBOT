@@ -58,3 +58,4 @@ Thumbs.db
 *.csv
 
 .session_reports/
+.reports/

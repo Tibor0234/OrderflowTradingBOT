@@ -35,6 +35,7 @@ class PositionManager:
 
         EventBus().subscribe(EventBusMsgType.PRICE_UPDATE, self.on_price_update)
         EventBus().subscribe(EventBusMsgType.SESSION_START, self.on_session_start)
+        EventBus().subscribe(EventBusMsgType.SESSION_END, self.on_session_end)
         EventBus().subscribe(EventBusMsgType.PROCESS_END, self.clear_state)
 
     @property
@@ -109,8 +110,10 @@ class PositionManager:
         for st in self.statistics:
             st.session_start(self.total_balance)
 
-    def clear_state(self):
+    def on_session_end(self):
         self.trade_execution.close_expired_trades()
+
+    def clear_state(self):
         self.orders.clear()
         self.increase_orders.clear()
         self.stop_orders.clear()

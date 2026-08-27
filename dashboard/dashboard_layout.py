@@ -245,6 +245,6 @@ class DashboardLayout:
 
         return dcc.Interval(
             id="trigger-check",
-            interval=250,
+            interval=1000,
             n_intervals=0
         )

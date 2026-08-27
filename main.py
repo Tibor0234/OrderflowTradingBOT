@@ -134,7 +134,8 @@ if __name__ == "__main__":
     # Reports
     report_generator = ReportGenerator(strategy_name=strategy.__class__.__name__) \
         .set_equity_curve_visualizer(session_equity_curve_visualizer) \
-        .set_statistics_visualizer(session_statistics_visualizer)
+        .set_statistics_visualizer(session_statistics_visualizer) \
+        .set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----
     threading.Thread(

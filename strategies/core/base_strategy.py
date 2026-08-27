@@ -9,11 +9,15 @@ class BaseStrategy(ABC):
         self.fw = framework
 
         EventBus().subscribe(EventBusMsgType.SESSION_START, self.on_session_start)
+        EventBus().subscribe(EventBusMsgType.PRICE_UPDATE, self.on_price_update)
         EventBus().subscribe(EventBusMsgType.CANDLE_CLOSE, self.on_candle_close)
         EventBus().subscribe(EventBusMsgType.TRADE_CLOSE, self.on_trade_close)
 
     #on signal metódusok
     def on_session_start(self):
+        pass
+
+    def on_price_update(self):
         pass
 
     def on_candle_close(self, candle_sec):

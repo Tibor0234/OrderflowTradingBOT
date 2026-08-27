@@ -3,3 +3,4 @@ psycopg[binary]
 plotly
 dash
 numpy
+reportlab

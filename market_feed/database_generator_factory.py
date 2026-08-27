@@ -9,6 +9,29 @@ class DatabaseGeneratorFactory:
     def __init__(self, conn: Connection):
         self.conn = conn
 
+    def instrument_metadata(self, session_pair_id):
+        """Betölti egy session pair instrumentumának metadata adatait."""
+        with self.conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT
+                    session_pair_id,
+                    symbol,
+                    status,
+                    base_asset,
+                    quote_asset,
+                    contract_type,
+                    tick_size,
+                    quantity_step,
+                    price_precision,
+                    quantity_precision,
+                    min_quantity,
+                    min_notional,
+                    onboard_date
+                FROM instrument_metadata
+                WHERE session_pair_id = %s
+            """, (session_pair_id,))
+            return cursor.fetchone()
+
     def trade_generator(self, session_pair_id):
         """
         Egyetlen session_pair trade adatait streameli.
