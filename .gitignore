@@ -57,5 +57,7 @@ Thumbs.db
 *.parquet
 *.csv
 
-.session_reports/
-.reports/
+# =========================
+# REPORTS
+# =========================
+reports/
