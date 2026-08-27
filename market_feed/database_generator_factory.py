@@ -94,8 +94,8 @@ class DatabaseGeneratorFactory:
 
     def context_generator(self, session_pair_id):
         """
-        Egy session_pair context candle-jeit period és interval szerint
-        csoportosítva streameli.
+        Egy session_pair context candle-jeit fetch csomagok szerint
+        streameli. A csomagok sorrendjét a fetch timestampje határozza meg.
 
         Egy yield egy teljes context csomag, amelyet a ContextManager
         közvetlenül fel tud dolgozni.
@@ -105,29 +105,60 @@ class DatabaseGeneratorFactory:
         )
         try:
             cursor.execute("""
-                SELECT period, "interval", raw
-                FROM ohlcv
-                WHERE session_pair_id = %s
+                SELECT
+                    fetch.id,
+                    fetch.interval,
+                    fetch.period,
+                    fetch.timestamp,
+                    candle.open_time,
+                    candle.raw
+                FROM ohlcv_fetches AS fetch
+                JOIN ohlcv AS candle
+                    ON candle.fetch_id = fetch.id
+                WHERE fetch.session_pair_id = %s
+                ORDER BY fetch.timestamp, candle.open_time
             """, (session_pair_id,))
 
-            grouped_candles = {}
-            for period, interval, raw_candle in cursor:
-                key = (period, interval)
-                grouped_candles.setdefault(key, []).append(raw_candle)
+            fetches = {}
+            for (
+                fetch_id,
+                interval,
+                period,
+                fetch_timestamp,
+                open_time,
+                raw_candle,
+            ) in cursor:
+                fetch = fetches.setdefault(
+                    fetch_id,
+                    {
+                        "interval": interval,
+                        "period": period,
+                        "timestamp": fetch_timestamp,
+                        "candles": [],
+                    },
+                )
+                fetch["candles"].append((open_time, raw_candle))
 
             packages = []
-            for (period, interval), candles in grouped_candles.items():
-                candles.sort(key=lambda candle: int(candle["open_time"]))
+            for fetch in fetches.values():
+                candles = [
+                    raw_candle
+                    for _, raw_candle in sorted(
+                        fetch["candles"],
+                        key=lambda candle: candle[0],
+                    )
+                ]
                 packages.append({
-                    "period": period,
-                    "interval": interval,
+                    "period": fetch["period"],
+                    "interval": fetch["interval"],
                     "open_time": int(candles[0]["open_time"]),
-                    "candles": candles
+                    "candles": candles,
+                    "fetch_timestamp": fetch["timestamp"],
                 })
 
             for package in sorted(
                 packages,
-                key=lambda package: package["open_time"]
+                key=lambda package: package["fetch_timestamp"]
             ):
                 yield package
         finally:
