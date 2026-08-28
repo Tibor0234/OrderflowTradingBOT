@@ -6,6 +6,7 @@ from global_services.events.utils import EventBusMsgType
 class SessionContext:
     def __init__(self):
         EventBus().subscribe(EventBusMsgType.SESSION_START, self.start_new_session)
+        EventBus().subscribe(EventBusMsgType.SESSION_METADATA, self.set_instrument_metadata)
 
         self.resources: dict[str, Resource] = {}
         self.instrument_metadata: InstrumentMetadata | None = None
@@ -14,9 +15,11 @@ class SessionContext:
         self.resources = resources
         return self
 
-    def start_new_session(self, instrument_metadata=None):
+    def start_new_session(self):
         for resource in self.resources.values():
             resource.reset()
+
+    def set_instrument_metadata(self, instrument_metadata=None):
         self.instrument_metadata = instrument_metadata
 
     def get_resource(self, name: str):

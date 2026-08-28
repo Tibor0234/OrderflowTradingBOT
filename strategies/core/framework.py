@@ -17,6 +17,7 @@ from analyzers.order_book_imbalance.model import OrderBookImbalance
 from analyzers.timeframe.model import Timeframe
 from analyzers.volume_delta.model import VolumeDelta
 from analyzers.volume_profile.model import VolumeProfile
+from analyzers.big_trades.model import BigTrades
 
 class StrategyFramework(SequenceAnalyzers):
     def __init__(self, position_manager: PositionManager, session_context: SessionContext, execution_order_book: ExecutionOrderBook):
@@ -183,6 +184,14 @@ class StrategyFramework(SequenceAnalyzers):
     def get_current_time(self):
         return DataProvider().get_time()
 
+    # session context queries
+
+    def get_price_distance(self, ticks: int | Decimal) -> Decimal:
+        """Returns an instrument-independent price distance in ticks."""
+        metadata = self.session_context.get_instrument_metadata()
+
+        return Decimal(str(ticks)) * metadata.tick_size
+
     # resource queries
 
     def get_context_timeframe(self, name: str) -> ContextTimeframe:
@@ -207,4 +216,7 @@ class StrategyFramework(SequenceAnalyzers):
         return self.session_context.get_resource(name)
 
     def get_volume_profile(self, name: str) -> VolumeProfile:
+        return self.session_context.get_resource(name)
+
+    def get_big_trades(self, name: str) -> BigTrades:
         return self.session_context.get_resource(name)

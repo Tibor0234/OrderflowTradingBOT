@@ -106,17 +106,17 @@ class DatabaseGeneratorFactory:
         try:
             cursor.execute("""
                 SELECT
-                    fetch.id,
-                    fetch.interval,
-                    fetch.period,
-                    fetch.timestamp,
+                    fetch_row.id,
+                    fetch_row.interval,
+                    fetch_row.period,
+                    fetch_row.timestamp,
                     candle.open_time,
                     candle.raw
-                FROM ohlcv_fetches AS fetch
+                FROM ohlcv_fetches AS fetch_row
                 JOIN ohlcv AS candle
-                    ON candle.fetch_id = fetch.id
-                WHERE fetch.session_pair_id = %s
-                ORDER BY fetch.timestamp, candle.open_time
+                    ON candle.fetch_id = fetch_row.id
+                WHERE fetch_row.session_pair_id = %s
+                ORDER BY fetch_row.timestamp, candle.open_time
             """, (session_pair_id,))
 
             fetches = {}

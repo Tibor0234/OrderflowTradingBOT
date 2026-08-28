@@ -1,15 +1,15 @@
 from sessions.resource import Resource
 from analyzers.timeframe.analyzer import TimeframeSubscriber
-from analyzers.volume_delta.big_trades_analyzer import BigTradesAnalyzer
+from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.volume_delta.model import VolumeDelta
 from data_managers.trade.utils import TradeMessage
 from analyzers.utils import OscillatorRecord
 
 class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
-    def __init__(self, big_trades=False, visualize=True):
+    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True):
         self.name: str
         self.visualize = visualize
-        self.big_trades = big_trades
+        self.big_trades_analyzer = big_trades
 
         self.new_starting_value = None
 
@@ -21,16 +21,11 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
 
     def init_model(self, length):
         self.model: VolumeDelta = VolumeDelta(length)
-        if self.big_trades:
-            self.big_trades_analyzer: BigTradesAnalyzer = BigTradesAnalyzer(length)
 
     def reset(self):
         self.model.history.clear()
         self.model.current = None
         self.new_starting_value = None
-
-        if self.big_trades:
-            self.big_trades_analyzer.reset()
 
     def on_timeframe_update(self, msg: TradeMessage):
         if self.model.current is None:
@@ -39,8 +34,7 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
                 value=self.new_starting_value if self.new_starting_value is not None else 0
             )
 
-        if self.big_trades:
-            self.big_trades_analyzer.update_record(msg.quantity)
+        if self.big_trades_analyzer is not None:
             if not self.big_trades_analyzer.is_big_trade(msg.quantity):
                 return
 
@@ -52,9 +46,6 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
             self.model.history.append(self.model.current)
 
         self.model.current = self.new_current_record(next_time)
-
-        if self.big_trades:
-            self.big_trades_analyzer.close_record()
 
     def get_visualizer(self):
         raise NotImplementedError("get_visualizer must be implemented")

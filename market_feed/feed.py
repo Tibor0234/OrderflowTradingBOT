@@ -104,8 +104,9 @@ class MarketFeed:
             if metadata_row is not None
             else None
         )
+        EventBus().emit(EventBusMsgType.SESSION_START)
         EventBus().emit(
-            EventBusMsgType.SESSION_START,
+            EventBusMsgType.SESSION_METADATA,
             instrument_metadata=instrument_metadata
         )
 

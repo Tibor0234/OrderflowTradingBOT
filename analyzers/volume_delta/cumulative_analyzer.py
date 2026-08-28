@@ -1,8 +1,9 @@
 from analyzers.volume_delta.base_analyzer import BaseVolumeDeltaAnalyzer
+from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.utils import OscillatorRecord
 
 class CVDAnalyzer(BaseVolumeDeltaAnalyzer):
-    def __init__(self, big_trades=False, visualize=True):
+    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True):
         super().__init__(big_trades, visualize)
 
     def get_visualizer(self):

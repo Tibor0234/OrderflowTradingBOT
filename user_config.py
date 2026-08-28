@@ -3,6 +3,7 @@ import inspect
 #Resources
 from analyzers.timeframe.analyzer import TimeframeAnalyzer
 from analyzers.open_interest.analyzer import OpenInterestAnalyzer
+from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.volume_delta.simple_analyzer import VolumeDeltaAnalyzer
 from analyzers.volume_delta.cumulative_analyzer import CVDAnalyzer
 from analyzers.volume_profile.analyzer import VolumeProfileAnalyzer
@@ -46,13 +47,16 @@ def get_essentials():
     # ⚡ Strategy
     strategy = TestStrategy()
 
+    big_trades = BigTradesAnalyzer(length=100, top_pct=1, visualize=True)
+
     # 🛠 Resources
     resources = {
+        'big_trades': big_trades,
         'tf_1m': TimeframeAnalyzer(candle_seconds=60),
         'cvd_1m': CVDAnalyzer(visualize=True),
         'vp_1m': VolumeProfileAnalyzer(),
 
-        'oi': OpenInterestAnalyzer(visualize=False),
+        'oi': OpenInterestAnalyzer(aggregation_minutes=1, visualize=False),
 
         'ctx_1d': ContextTimeframeAnalyzer(ContextPeriod.LAST_DAY),
         #'ctx_1d_vp': ContextVolumeProfileAnalyzer(),

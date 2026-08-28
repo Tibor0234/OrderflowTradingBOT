@@ -2,6 +2,7 @@ from enum import Enum
 
 class EventBusMsgType(Enum):
     SESSION_START = 'session_start'
+    SESSION_METADATA = 'session_metadata'
     SESSION_END = 'session_end'
     PROCESS_END = 'process_end'
     
