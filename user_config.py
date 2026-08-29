@@ -51,17 +51,17 @@ def get_essentials():
 
     # 🛠 Resources
     resources = {
-        'big_trades': big_trades,
+        #'big_trades': big_trades,
         'tf_1m': TimeframeAnalyzer(candle_seconds=60),
         'cvd_1m': CVDAnalyzer(visualize=True),
-        'vp_1m': VolumeProfileAnalyzer(),
+        #'vp_1m': VolumeProfileAnalyzer(),
 
-        'oi': OpenInterestAnalyzer(aggregation_minutes=1, visualize=False),
+        #'oi': OpenInterestAnalyzer(aggregation_minutes=1, visualize=False),
 
-        'ohlcv_1d': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_DAY),
+        #'ohlcv_1d': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_DAY),
         #'ohlcv_1d_vp': OHLCVVolumeProfileAnalyzer(),
 
-        'ohlcv_1w': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_WEEK),
+        #'ohlcv_1w': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_WEEK),
         #'ohlcv_1w_vp': OHLCVVolumeProfileAnalyzer(),
     }
 

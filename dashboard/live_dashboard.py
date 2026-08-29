@@ -1,3 +1,5 @@
+import logging
+
 import dash
 from dash import Input, Output
 from dashboard.chart_renderer import ChartRenderer
@@ -129,5 +131,6 @@ class LiveDashboard:
         self.cumulative_statistics_visualizer = cumulative_visualizer
         return self
 
-    def run(self, debug=True):
-        self.app.run(debug=debug)
+    def run(self, debug=False):
+        logging.getLogger("werkzeug").setLevel(logging.ERROR)
+        self.app.run(debug=debug, use_reloader=False)

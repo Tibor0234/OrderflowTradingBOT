@@ -54,8 +54,14 @@ if __name__ == "__main__":
 
     # ---- Equity & position management ----
     execution_order_book = ExecutionOrderBook()
-    cumulative_equity_curve = CumulativeEquityCurve()
-    session_pair_based_equity_curve = SessionPairBasedEquityCurve()
+    cumulative_equity_curve = CumulativeEquityCurve(
+        refresh_rate=2_000,
+        max_points=5_000
+    )
+    session_pair_based_equity_curve = SessionPairBasedEquityCurve(
+        refresh_rate=250,
+        max_points=2_000
+    )
     cumulative_statistics = CumulativeStatistics()
     session_pair_statistics = SessionPairBasedStatistics()
     position_manager = PositionManager(
@@ -133,8 +139,8 @@ if __name__ == "__main__":
 
     # Reports
     report_generator = ReportGenerator(strategy_name=strategy.__class__.__name__) \
-        .set_equity_curve_visualizer(session_pair_equity_curve_visualizer) \
-        .set_statistics_visualizer(session_pair_statistics_visualizer) \
+        .set_equity_curve_visualizers(session_pair_equity_curve_visualizer, cumulative_equity_curve_visualizer) \
+        .set_statistics_visualizers(session_pair_statistics_visualizer, cumulative_statistics_visualizer) \
         .set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----

@@ -94,12 +94,14 @@ class OrderExecutionManager:
                 raise ValueError("Cannot add opposite side order to existing trade")
 
             trade.update_on_fill(execution_price, filled_value, order.leverage)
-            trade.charge_fee_from_value(filled_value, fee_rate)
+            fee = trade.charge_fee_from_value(filled_value, fee_rate)
         else:
             trade = Trade.convert_from_order(order, execution_price, filled_value)
             order = self._link_order_to_trade(order, trade)
-            trade.charge_fee(fee_rate)
+            fee = trade.charge_fee(fee_rate)
             self.position_manager.trades.append(trade)
+
+        self.position_manager.realized_balance -= filled_value + fee
 
         self.position_manager.trade_execution._set_liquidation_order(trade)
 

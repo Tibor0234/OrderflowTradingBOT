@@ -2,8 +2,8 @@ from data_analysis.equity_curve.base import BaseEquityCurve
 from global_services.data.provider import DataProvider
 
 class CumulativeEquityCurve(BaseEquityCurve):
-    def __init__(self, refresh_rate=1000):
-        self.content = {}
+    def __init__(self, refresh_rate=1_000, max_points=2_000):
+        super().__init__(max_points=max_points)
         self.starting_equity = None
         self.session_pair_boundaries = []
         
@@ -11,6 +11,7 @@ class CumulativeEquityCurve(BaseEquityCurve):
         self.update_count = 0
 
         self.last_chart_time = 0
+        self.last_source_time = None
         self.session_pair_point_count = 0
         self.session_pair_start = None
 
@@ -21,6 +22,7 @@ class CumulativeEquityCurve(BaseEquityCurve):
         self.session_pair_point_count = 0
         self.update_count = 0
         self.session_pair_start = None
+        self.last_source_time = None
 
     def update(self, equity):
         self.update_count += 1
@@ -31,15 +33,15 @@ class CumulativeEquityCurve(BaseEquityCurve):
         if not self.is_initialized() or self.update_count >= self.refresh_rate:
             time = DataProvider().get_time()
 
-            if self.session_pair_start is None:
-                self.session_pair_start = time
-                chart_time = self.last_chart_time + (time - self.session_pair_start)
+            if self.last_source_time is None:
+                chart_time = self.last_chart_time + 1
                 self.session_pair_boundaries.append(chart_time)
             else:
-                chart_time = self.last_chart_time + (time - self.session_pair_start)
+                chart_time = self.last_chart_time + max(time - self.last_source_time, 1)
 
-            self.content[chart_time] = equity
+            self._add_point(chart_time, equity)
             self.last_chart_time = chart_time
+            self.last_source_time = time
 
             self.session_pair_point_count += 1
             self.update_count = 0

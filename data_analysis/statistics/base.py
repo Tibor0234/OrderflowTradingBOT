@@ -47,10 +47,10 @@ class BaseStatistics(ABC):
         else:
             self.average_trade_duration = trade_duration_s
 
-    def update_on_price_change(self, equity):
+    def update_on_price_change(self, equity, force=False):
         self._update_count += 1
 
-        if self._update_count >= self._refresh_rate:
+        if force or self._update_count >= self._refresh_rate:
             self.equity = equity
             self.roi = ((equity - self.starting_balance) / self.starting_balance)
 

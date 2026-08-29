@@ -44,7 +44,8 @@ class PositionManager:
 
     @property
     def total_balance(self):
-        return self.realized_balance + self.floating_balance
+        locked_balance = sum(trade.value for trade in self.trades)
+        return self.realized_balance + locked_balance + self.floating_balance
 
     def _set_liquidation_order(self, trade: Trade):
         self.trade_execution._set_liquidation_order(trade)
@@ -112,6 +113,12 @@ class PositionManager:
 
     def on_session_pair_end(self):
         self.trade_execution.close_expired_trades()
+
+        for eq in self.equity_curves:
+            eq.update(self.total_balance)
+
+        for st in self.statistics:
+            st.update_on_price_change(self.total_balance, force=True)
 
     def clear_state(self):
         self.orders.clear()
