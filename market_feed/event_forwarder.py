@@ -1,4 +1,4 @@
-from data_managers.context.manager import ContextManager
+from data_managers.ohlcv.manager import OHLCVManager
 from data_managers.news.manager import NewsManager
 from data_managers.order_book.manager import OrderBookManager
 from data_managers.open_interest.manager import OpenInterestManager
@@ -17,14 +17,14 @@ class EventForwarder:
         open_interest_manager: OpenInterestManager,
         orderbook_manager: OrderBookManager,
         trade_manager: TradeManager,
-        context_manager: ContextManager,
+        ohlcv_manager: OHLCVManager,
         news_manager: NewsManager,
     ):
         self.managers = {
             EventType.OI: open_interest_manager,
             EventType.OB: orderbook_manager,
             EventType.TR: trade_manager,
-            EventType.CTX: context_manager,
+            EventType.OHLCV: ohlcv_manager,
             EventType.NWS: news_manager,
         }
 

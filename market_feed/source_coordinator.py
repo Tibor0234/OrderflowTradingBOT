@@ -25,7 +25,7 @@ class SourceCoordinator:
             EventType.TR: self.generator_factory.trade_generator,
             EventType.OB: self.generator_factory.orderbook_generator,
             EventType.OI: self.generator_factory.oi_generator,
-            EventType.CTX: self.generator_factory.context_generator,
+            EventType.OHLCV: self.generator_factory.context_generator,
             EventType.NWS: self.generator_factory.news_generator,
         }
 

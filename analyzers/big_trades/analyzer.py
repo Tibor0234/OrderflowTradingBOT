@@ -2,7 +2,7 @@ from collections import deque
 from decimal import Decimal
 from math import ceil
 
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from data_managers.trade.subscriber import TradeManagerSubscriber
 from data_managers.trade.utils import TradeMessage
 from analyzers.big_trades.model import BigTrades

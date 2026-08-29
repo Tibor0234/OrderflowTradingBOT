@@ -1,6 +1,6 @@
 from psycopg import Connection
 
-from data_managers.context.manager import ContextManager
+from data_managers.ohlcv.manager import OHLCVManager
 from data_managers.news.manager import NewsManager
 from data_managers.order_book.manager import OrderBookManager
 from data_managers.open_interest.manager import OpenInterestManager
@@ -13,7 +13,7 @@ from market_feed.session_pair_manager import SessionPairManager
 from market_feed.database_generator_factory import DatabaseGeneratorFactory
 from market_feed.source_coordinator import SourceCoordinator
 from market_feed.event_forwarder import EventForwarder
-from sessions.utils import InstrumentMetadata
+from session_pairs.utils import InstrumentMetadata
 
 
 class MarketFeed:
@@ -38,7 +38,7 @@ class MarketFeed:
         orderbook_manager: OrderBookManager,
         trade_manager: TradeManager,
         news_manager: NewsManager,
-        context_manager: ContextManager
+        ohlcv_manager: OHLCVManager
     ):
         self.session_pair_manager = SessionPairManager(conn)
         
@@ -51,7 +51,7 @@ class MarketFeed:
             open_interest_manager,
             orderbook_manager,
             trade_manager,
-            context_manager,
+            ohlcv_manager,
             news_manager,
         )
 
@@ -59,14 +59,14 @@ class MarketFeed:
     def session_counter(self):
         """
         Hozzáférést biztosít a session counter objektumhoz a dashboard számára.
-        
+
         Visszaadja a SessionCounter objektumot, amely tartalmazza:
-        - current: aktuális session pár indexe (0-based)
-        - total: összes session pár száma
-        
-        Használat:
-            current = market_feed.session_counter.current
-            total = market_feed.session_counter.total
+        - session: az adatbázis session azonosítója
+        - pair: az aktuális pair sorszáma az adott sessionön belül
+        - session_pair: az aktuális session pair globális sorszáma
+        - total_sessions: összes adatbázis session száma
+        - total_pairs: az aktuális session összes pairjének száma
+        - total_session_pairs: összes feldolgozandó session pair száma
         """
         return self.session_pair_manager.get_counter()
 
@@ -104,9 +104,9 @@ class MarketFeed:
             if metadata_row is not None
             else None
         )
-        EventBus().emit(EventBusMsgType.SESSION_START)
+        EventBus().emit(EventBusMsgType.SESSION_PAIR_START)
         EventBus().emit(
-            EventBusMsgType.SESSION_METADATA,
+            EventBusMsgType.SESSION_PAIR_METADATA,
             instrument_metadata=instrument_metadata
         )
 
@@ -128,4 +128,4 @@ class MarketFeed:
 
             self.source_coordinator.advance_source(sources, selected_event_type)
 
-        EventBus().emit(EventBusMsgType.SESSION_END)
+        EventBus().emit(EventBusMsgType.SESSION_PAIR_END)

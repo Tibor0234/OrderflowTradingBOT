@@ -14,21 +14,21 @@ from data_managers.order_book.manager import OrderBookManager
 from data_managers.order_book.subscriber import OrderBookManagerSubscriber
 from data_managers.trade.manager import TradeManager
 from data_managers.trade.subscriber import TradeManagerSubscriber
-from data_managers.context.manager import ContextManager
-from data_managers.context.subscriber import ContextManagerSubscriber
+from data_managers.ohlcv.manager import OHLCVManager
+from data_managers.ohlcv.subscriber import OHLCVManagerSubscriber
 from data_managers.news.manager import NewsManager
 from data_managers.news.subscriber import NewsManagerSubscriber
 
 # ---- Trading & session ----
 from trading.execution.position_manager import PositionManager
-from data_analysis.equity_curve.session_based import SessionBasedEquityCurve
+from data_analysis.equity_curve.session_pair_based import SessionPairBasedEquityCurve
 from data_analysis.equity_curve.cumulative import CumulativeEquityCurve
-from data_analysis.statistics.session_based import SessionBasedStatistics
+from data_analysis.statistics.session_pair_based import SessionPairBasedStatistics
 from data_analysis.statistics.cumulative import CumulativeStatistics
 from trading.execution.order_book import ExecutionOrderBook
-from sessions.context import SessionContext
+from session_pairs.context import SessionPairContext
 from strategies.core.framework import StrategyFramework
-from report_maker.generator import ReportGenerator
+from report_generator.generator import ReportGenerator
 
 # ---- Visualization ----
 from dashboard.live_dashboard import LiveDashboard
@@ -55,23 +55,23 @@ if __name__ == "__main__":
     # ---- Equity & position management ----
     execution_order_book = ExecutionOrderBook()
     cumulative_equity_curve = CumulativeEquityCurve()
-    session_based_equity_curve = SessionBasedEquityCurve()
+    session_pair_based_equity_curve = SessionPairBasedEquityCurve()
     cumulative_statistics = CumulativeStatistics()
-    session_statistics = SessionBasedStatistics()
+    session_pair_statistics = SessionPairBasedStatistics()
     position_manager = PositionManager(
         starting_balance=Decimal(starting_balance),
         order_book=execution_order_book
     ) \
         .add_equity_curve(cumulative_equity_curve) \
-        .add_equity_curve(session_based_equity_curve) \
+        .add_equity_curve(session_pair_based_equity_curve) \
         .add_statistics(cumulative_statistics) \
-        .add_statistics(session_statistics)
+        .add_statistics(session_pair_statistics)
 
-    # ---- Session context ----
-    session_context = SessionContext()
+    # ---- Session-pair context ----
+    session_pair_context = SessionPairContext()
 
     # ---- Strategy setup ----
-    strategy_framework = StrategyFramework(position_manager, session_context, execution_order_book)
+    strategy_framework = StrategyFramework(position_manager, session_pair_context, execution_order_book)
     strategy.init(strategy_framework)
 
     # ---- Managers ----
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     orderbook_manager = OrderBookManager().subscribe(execution_order_book)
     trade_manager = TradeManager()
     news_manager = NewsManager()
-    context_manager = ContextManager()
+    ohlcv_manager = OHLCVManager()
 
     # ---- DB Connection ----
     conn = psycopg.connect(os.getenv('POSTGRES_URL'))
@@ -91,11 +91,11 @@ if __name__ == "__main__":
         orderbook_manager,
         trade_manager,
         news_manager,
-        context_manager
+        ohlcv_manager
     )
 
     # ---- Setup resources ----
-    session_context.set_resources(resources)
+    session_pair_context.set_resources(resources)
 
     for resource in resources.values():
         if isinstance(resource, TradeManagerSubscriber):
@@ -104,8 +104,8 @@ if __name__ == "__main__":
             orderbook_manager.subscribe(resource)
         elif isinstance(resource, OpenInterestManagerSubscriber):
             open_interest_manager.subscribe(resource)
-        elif isinstance(resource, ContextManagerSubscriber):
-            context_manager.subscribe(resource)
+        elif isinstance(resource, OHLCVManagerSubscriber):
+            ohlcv_manager.subscribe(resource)
         elif isinstance(resource, NewsManagerSubscriber):
             news_manager.subscribe(resource)
 
@@ -113,15 +113,15 @@ if __name__ == "__main__":
     # Trade & equity visualizers
     trade_visualizer = TradeVisualizer(position_manager.trades)
     order_visualizer = OrderVisualizer(position_manager.orders, position_manager.increase_orders)
-    session_equity_curve_visualizer = EquityCurveVisualizer(session_based_equity_curve)
+    session_pair_equity_curve_visualizer = EquityCurveVisualizer(session_pair_based_equity_curve)
     cumulative_equity_curve_visualizer = EquityCurveVisualizer(cumulative_equity_curve)
-    session_statistics_visualizer = StatisticsVisualizer(session_statistics)
+    session_pair_statistics_visualizer = StatisticsVisualizer(session_pair_statistics)
     cumulative_statistics_visualizer = StatisticsVisualizer(cumulative_statistics)
 
     dashboard \
         .set_execution_visualizers(trade_visualizer, order_visualizer) \
-        .set_equity_curve_visualizers(session_equity_curve_visualizer, cumulative_equity_curve_visualizer) \
-        .set_statistics_visualizers(session_statistics_visualizer, cumulative_statistics_visualizer) \
+        .set_equity_curve_visualizers(session_pair_equity_curve_visualizer, cumulative_equity_curve_visualizer) \
+        .set_statistics_visualizers(session_pair_statistics_visualizer, cumulative_statistics_visualizer) \
         .set_session_counter(market_feed.session_counter)
 
     # Price chart & context visualizers
@@ -133,8 +133,8 @@ if __name__ == "__main__":
 
     # Reports
     report_generator = ReportGenerator(strategy_name=strategy.__class__.__name__) \
-        .set_equity_curve_visualizer(session_equity_curve_visualizer) \
-        .set_statistics_visualizer(session_statistics_visualizer) \
+        .set_equity_curve_visualizer(session_pair_equity_curve_visualizer) \
+        .set_statistics_visualizer(session_pair_statistics_visualizer) \
         .set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----

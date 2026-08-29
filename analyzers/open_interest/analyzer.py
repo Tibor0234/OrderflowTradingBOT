@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from data_managers.open_interest.subscriber import OpenInterestManagerSubscriber
 from data_managers.open_interest.utils import OpenInterestMessage
 from analyzers.open_interest.model import OpenInterest

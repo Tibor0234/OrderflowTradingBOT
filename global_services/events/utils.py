@@ -1,9 +1,9 @@
 from enum import Enum
 
 class EventBusMsgType(Enum):
-    SESSION_START = 'session_start'
-    SESSION_METADATA = 'session_metadata'
-    SESSION_END = 'session_end'
+    SESSION_PAIR_START = 'session_pair_start'
+    SESSION_PAIR_METADATA = 'session_pair_metadata'
+    SESSION_PAIR_END = 'session_pair_end'
     PROCESS_END = 'process_end'
     
     CANDLE_CLOSE = 'candle_close'

@@ -47,7 +47,7 @@ class DashboardLayout:
             children=[
 
                 html.Div(
-                    id="session-panel",
+                    id="session-pair-panel",
                     style={
                         "flex": "0.3",
                         "padding": "15px 10px",
@@ -60,7 +60,7 @@ class DashboardLayout:
                         "letterSpacing": "1px",
                         "textTransform": "uppercase"
                     },
-                    children="Session Panel"
+                    children="Session Pair"
                 ),
 
                 html.Div(
@@ -175,19 +175,19 @@ class DashboardLayout:
             children=[
 
                 html.Div(
-                    "Session Stats",
+                    "Session Pair Stats",
                     style={"textAlign": "center", "padding": "4px", "fontWeight": "bold"}
                 ),
 
                 dcc.Graph(
-                    id="session-equity-curve",
+                    id="session-pair-equity-curve",
                     style={"flex": "1.5"},
                     figure=go.Figure(),
                     config={"displayModeBar": False},
                 ),
 
                 html.Div(
-                    id="session-stats-panel",
+                    id="session-pair-stats-panel",
                     style={
                         "flex": "2",
                         "padding": "10px",
@@ -196,7 +196,7 @@ class DashboardLayout:
                         "backgroundColor": "#232323"
                     },
                     children=[
-                        html.Div(id="session-stats-content")
+                        html.Div(id="session-pair-stats-content")
                     ]
                 )
             ]

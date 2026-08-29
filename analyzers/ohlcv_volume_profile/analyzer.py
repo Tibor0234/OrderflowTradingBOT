@@ -1,13 +1,14 @@
 from decimal import Decimal
-from data_managers.context.utils import ContextMessage, ContextPeriod
-from analyzers.context_volume_profile.utils import ContextPriceBin, POC, ValueArea
-from sessions.resource import Resource
-from analyzers.context_timeframe.analyzer import ContextTimeframeSubscriber
-from analyzers.context_volume_profile.model import ContextVolumeProfile
+from data_managers.ohlcv.utils import OHLCVMessage, OHLCVPeriod
+from analyzers.ohlcv_volume_profile.utils import OHLCVPriceBin, POC, ValueArea
+from data_managers.ohlcv.utils import OHLCVMessage
+from session_pairs.resource import Resource
+from analyzers.ohlcv_timeframe.analyzer import OHLCVTimeframeSubscriber
+from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 
-class ContextVolumeProfileAnalyzer(Resource, ContextTimeframeSubscriber):
+class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
     def __init__(self, price_bin_count=24, value_area_pct=70, visualize=True):
-        self.model: ContextVolumeProfile = ContextVolumeProfile(price_bin_count, value_area_pct)
+        self.model: OHLCVVolumeProfile = OHLCVVolumeProfile(price_bin_count, value_area_pct)
         self.visualize = visualize
 
         self.poc_index = None
@@ -15,11 +16,11 @@ class ContextVolumeProfileAnalyzer(Resource, ContextTimeframeSubscriber):
     @property
     def visualizer(self):
         if self.visualize:
-            from visualizers.context_chart.volume_profile import ContextVolumeProfileVisualizer
-            return ContextVolumeProfileVisualizer(self.model)
+            from visualizers.context_chart.volume_profile import OHLCVVolumeProfileVisualizer
+            return OHLCVVolumeProfileVisualizer(self.model)
         return None
 
-    def set_period(self, period: ContextPeriod):
+    def set_period(self, period: OHLCVPeriod):
         self.model.period = period
 
     def reset(self):
@@ -29,7 +30,7 @@ class ContextVolumeProfileAnalyzer(Resource, ContextTimeframeSubscriber):
         self.poc_index = None
         self.model.start_time = None
 
-    def on_context_timeframe_update(self, msg: ContextMessage):
+    def on_context_timeframe_update(self, msg: OHLCVMessage):
         self.model.start_time = min(c.time for c in msg.candles)
 
         volumes = [c.volume for c in msg.candles]
@@ -43,7 +44,7 @@ class ContextVolumeProfileAnalyzer(Resource, ContextTimeframeSubscriber):
         bin_size = price_range / Decimal(self.model.price_bin_count)
 
         bins = [
-            ContextPriceBin(
+            OHLCVPriceBin(
                 low=min_price + bin_size * i,
                 size=bin_size,
                 volume=Decimal(0),

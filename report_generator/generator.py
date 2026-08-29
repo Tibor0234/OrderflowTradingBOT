@@ -21,14 +21,14 @@ class ReportGenerator:
         self.started_at = time.time()
         self.report_directory = None
 
-        EventBus().subscribe(EventBusMsgType.SESSION_END, self.generate_session_report)
-        EventBus().subscribe(EventBusMsgType.SESSION_END, self.generate_backtest_summary)
+        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_session_pair_report)
+        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_backtest_summary)
 
-    def generate_session_report(self):
+    def generate_session_pair_report(self):
         symbol = DataProvider().get_symbol()
-        session_number = self.session_counter.current
+        session_number = self.session_counter.session
         report_directory = self._get_report_directory()
-        report_path = report_directory / f"session_{session_number}-{symbol}.pdf"
+        report_path = report_directory / f"session_pair_{session_number}-{symbol}.pdf"
 
         self._render_pdf(report_path, session_number, symbol)
 
@@ -42,7 +42,7 @@ class ReportGenerator:
             self.report_directory.mkdir(parents=True, exist_ok=True)
         return self.report_directory
 
-    def _render_pdf(self, report_path, session_number, symbol):
+    def _render_pdf(self, report_path, session_pair_number, symbol):
         page_width, page_height = A4
         pdf = canvas.Canvas(str(report_path), pagesize=A4)
 
@@ -50,16 +50,16 @@ class ReportGenerator:
         pdf.rect(0, 0, page_width, page_height, fill=1, stroke=0)
         pdf.setFillColor(colors.white)
         pdf.setFont("Helvetica-Bold", 20)
-        pdf.drawString(40, page_height - 50, f"Session {session_number} - {symbol}")
+        pdf.drawString(40, page_height - 50, f"Session pair {session_pair_number} - {symbol}")
 
         self._draw_equity_curve(pdf, 40, 400, page_width - 80, 300)
         self._draw_statistics(pdf, 40, 370)
         pdf.save()
 
     def _draw_statistics(self, pdf, x, top):
-        categories, values = self.session_statistics_visualizer.get_panel_content()
+        categories, values = self.session_pair_statistics_visualizer.get_panel_content()
         pdf.setFont("Helvetica-Bold", 13)
-        pdf.drawString(x, top, "Session Statistics")
+        pdf.drawString(x, top, "Session Pair Statistics")
 
         pdf.setFont("Helvetica", 10)
         for index, (category, value) in enumerate(zip(categories, values)):
@@ -76,8 +76,8 @@ class ReportGenerator:
         pdf.setStrokeColor(colors.HexColor("#555555"))
         pdf.rect(x, y, width, height, fill=0, stroke=1)
 
-        trace = self.session_equity_visualizer.get_traces()
-        shapes = self.session_equity_visualizer.get_shapes()
+        trace = self.session_pair_equity_visualizer.get_traces()
+        shapes = self.session_pair_equity_visualizer.get_shapes()
         values = [float(value) for value in trace.y]
         if not values:
             pdf.setFont("Helvetica", 10)
@@ -142,18 +142,18 @@ class ReportGenerator:
         self.session_counter = session_counter
         return self
 
-    def set_equity_curve_visualizers(self, session_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
-        self.session_equity_visualizer = session_visualizer
+    def set_equity_curve_visualizers(self, session_pair_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
+        self.session_pair_equity_visualizer = session_pair_visualizer
         self.cumulative_equity_visualizer = cumulative_visualizer
         return self
 
-    def set_equity_curve_visualizer(self, session_visualizer: EquityCurveVisualizer):
-        return self.set_equity_curve_visualizers(session_visualizer, None)
+    def set_equity_curve_visualizer(self, session_pair_visualizer: EquityCurveVisualizer):
+        return self.set_equity_curve_visualizers(session_pair_visualizer, None)
     
-    def set_statistics_visualizers(self, session_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
-        self.session_statistics_visualizer = session_visualizer
+    def set_statistics_visualizers(self, session_pair_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
+        self.session_pair_statistics_visualizer = session_pair_visualizer
         self.cumulative_statistics_visualizer = cumulative_visualizer
         return self
 
-    def set_statistics_visualizer(self, session_visualizer: StatisticsVisualizer):
-        return self.set_statistics_visualizers(session_visualizer, None)
+    def set_statistics_visualizer(self, session_pair_visualizer: StatisticsVisualizer):
+        return self.set_statistics_visualizers(session_pair_visualizer, None)

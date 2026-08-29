@@ -1,7 +1,7 @@
 from data_analysis.equity_curve.base import BaseEquityCurve
 from global_services.data.provider import DataProvider
 
-class SessionBasedEquityCurve(BaseEquityCurve):
+class SessionPairBasedEquityCurve(BaseEquityCurve):
     def __init__(self, refresh_rate=100):
         self.content = {}
         self.starting_equity = None
@@ -12,7 +12,7 @@ class SessionBasedEquityCurve(BaseEquityCurve):
     def is_initialized(self):
         return len(self.content) >= 2
     
-    def start_session(self):
+    def start_session_pair(self):
         self.content.clear()
         self.update_count = 0
         self.starting_equity = None

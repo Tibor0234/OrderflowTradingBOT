@@ -1,4 +1,4 @@
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from analyzers.timeframe.analyzer import TimeframeSubscriber
 from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.volume_delta.model import VolumeDelta

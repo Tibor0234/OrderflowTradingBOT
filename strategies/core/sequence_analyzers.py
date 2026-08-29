@@ -1,7 +1,10 @@
 import numpy as np
+from global_services.data.provider import DataProvider
 from strategies.core.utils import MonotonicTrend, Outlier
 
 class SequenceAnalyzers:
+    # generic sequence analysis methods
+
     def has_min_length(self, sequence, length):
         return len(sequence) >= length
 
@@ -173,3 +176,53 @@ class SequenceAnalyzers:
                 i += 1
 
         return out
+
+    # big trades sequence analysis methods
+
+    def get_big_trade_dominance(self, sequence, window_seconds=None, length=None):
+        """Returns volume-weighted big-trade dominance in the range [-1, 1]."""
+        if window_seconds is not None and window_seconds <= 0:
+            raise ValueError("window_seconds must be greater than 0")
+
+        records = list(sequence)
+        if length is not None:
+            records = records[-length:]
+        if window_seconds is not None and records:
+            current_time = DataProvider().get_time()
+            window_start = current_time - window_seconds * 1000
+            records = [record for record in records if record.time >= window_start]
+
+        if not records:
+            return 0.0
+
+        buy_volume = sum(
+            float(record.quantity)
+            for record in records
+            if record.side.value > 0
+        )
+        sell_volume = sum(
+            float(record.quantity)
+            for record in records
+            if record.side.value < 0
+        )
+        total_volume = buy_volume + sell_volume
+
+        if total_volume == 0:
+            return 0.0
+
+        return (buy_volume - sell_volume) / total_volume
+
+    def get_big_trade_intensity(self, sequence, window_seconds=60, length=None):
+        """Returns the number of big trades per minute in the time window."""
+        if window_seconds <= 0:
+            raise ValueError("window_seconds must be greater than 0")
+
+        records = list(sequence)
+        if length is not None:
+            records = records[-length:]
+        if records:
+            current_time = DataProvider().get_time()
+            window_start = current_time - window_seconds * 1000
+            records = [record for record in records if record.time >= window_start]
+
+        return len(records) * 60 / window_seconds

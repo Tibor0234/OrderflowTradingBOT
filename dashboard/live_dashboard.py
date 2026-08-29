@@ -3,7 +3,7 @@ from dash import Input, Output
 from dashboard.chart_renderer import ChartRenderer
 from dashboard.dashboard_layout import DashboardLayout
 from dashboard.panel_content_renderer import PanelContentRenderer
-from data_managers.context.utils import ContextPeriod
+from data_managers.ohlcv.utils import OHLCVPeriod
 from visualizers.price_chart.base import PriceChartVisualizer
 from visualizers.context_chart.base import ContextChartVisualizer
 from visualizers.market_entity.trade import TradeVisualizer
@@ -24,8 +24,8 @@ class LiveDashboard:
 
         self.price_visualizers = []
         self.context_visualizers = {
-            ContextPeriod.LAST_DAY: [],
-            ContextPeriod.LAST_WEEK: []
+            OHLCVPeriod.LAST_DAY: [],
+            OHLCVPeriod.LAST_WEEK: []
         }
 
         self.trade_visualizer = None
@@ -33,10 +33,10 @@ class LiveDashboard:
 
         self.session_counter = None
 
-        self.session_equity_visualizer = None
+        self.session_pair_equity_visualizer = None
         self.cumulative_equity_visualizer = None
 
-        self.session_statistics_visualizer = None
+        self.session_pair_statistics_visualizer = None
         self.cumulative_statistics_visualizer = None
 
         self.app.layout = self.layout.build()
@@ -49,13 +49,13 @@ class LiveDashboard:
                 self.price_visualizers
             ),
             "Last week chart": self.chart_renderer.build_context_chart(
-                self.context_visualizers[ContextPeriod.LAST_WEEK]
+                self.context_visualizers[OHLCVPeriod.LAST_WEEK]
             ),
             "Last day chart": self.chart_renderer.build_context_chart(
-                self.context_visualizers[ContextPeriod.LAST_DAY]
+                self.context_visualizers[OHLCVPeriod.LAST_DAY]
             ),
-            "Session equity curve": self.chart_renderer.build_equity_curve(
-                self.session_equity_visualizer
+            "Session pair equity curve": self.chart_renderer.build_equity_curve(
+                self.session_pair_equity_visualizer
             ),
             "Cumulative equity curve": self.chart_renderer.build_equity_curve(
                 self.cumulative_equity_visualizer
@@ -63,7 +63,7 @@ class LiveDashboard:
         }
 
         panels = {
-            "Session": self.panel_content_renderer.render_session_panel(
+            "Session pair": self.panel_content_renderer.render_session_pair_panel(
                 self.session_counter
             ),
             "Trades": self.panel_content_renderer.render_execution_panel(
@@ -72,18 +72,15 @@ class LiveDashboard:
             "Orders": self.panel_content_renderer.render_execution_panel(
                 self.order_visualizer
             ),
-            "Session statistics": self.panel_content_renderer.render_stats_panel(
-                self.session_statistics_visualizer
+            "Session pair statistics": self.panel_content_renderer.render_stats_panel(
+                self.session_pair_statistics_visualizer
             ),
             "Cumulative statistics": self.panel_content_renderer.render_stats_panel(
                 self.cumulative_statistics_visualizer
             )
         }
 
-        session_number = None
-        if self.session_counter:
-            session_number = self.session_counter.current
-        return session_number, figures, panels
+        return figures, panels
 
 
     def _register_callbacks(self):
@@ -92,17 +89,17 @@ class LiveDashboard:
             Output("price-chart", "figure"),
             Output("last-week-chart", "figure"),
             Output("last-day-chart", "figure"),
-            Output("session-equity-curve", "figure"),
+            Output("session-pair-equity-curve", "figure"),
             Output("cumulative-equity-curve", "figure"),
-            Output("session-panel", "children"),
+            Output("session-pair-panel", "children"),
             Output("trade-panel", "children"),
             Output("order-panel", "children"),
-            Output("session-stats-panel", "children"),
+            Output("session-pair-stats-panel", "children"),
             Output("cumulative-stats-panel", "children"),
             Input("trigger-check", "n_intervals")
         )
         def update(_):
-            session_number, figures, panels = self._build_dashboard_snapshot()
+            figures, panels = self._build_dashboard_snapshot()
             return (*figures.values(), *panels.values())
 
     def add_price_chart_visualizer(self, visualizer: PriceChartVisualizer):
@@ -122,13 +119,13 @@ class LiveDashboard:
         self.order_visualizer = order_visualizer
         return self
 
-    def set_equity_curve_visualizers(self, session_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
-        self.session_equity_visualizer = session_visualizer
+    def set_equity_curve_visualizers(self, session_pair_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
+        self.session_pair_equity_visualizer = session_pair_visualizer
         self.cumulative_equity_visualizer = cumulative_visualizer
         return self
     
-    def set_statistics_visualizers(self, session_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
-        self.session_statistics_visualizer = session_visualizer
+    def set_statistics_visualizers(self, session_pair_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
+        self.session_pair_statistics_visualizer = session_pair_visualizer
         self.cumulative_statistics_visualizer = cumulative_visualizer
         return self
 

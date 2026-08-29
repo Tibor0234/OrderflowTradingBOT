@@ -1,10 +1,10 @@
 from datetime import datetime
 import plotly.graph_objects as go
-from analyzers.context_timeframe.model import ContextTimeframe
+from analyzers.ohlcv_timeframe.model import OHLCVTimeframe
 from visualizers.context_chart.base import ContextChartVisualizer
 
-class ContextTimeframeVisualizer(ContextChartVisualizer):
-    def __init__(self, timeframe: ContextTimeframe):
+class OHLCVTimeframeVisualizer(ContextChartVisualizer):
+    def __init__(self, timeframe: OHLCVTimeframe):
         self.timeframe = timeframe
         self.period = timeframe.period
 

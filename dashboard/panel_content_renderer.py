@@ -4,8 +4,11 @@ from visualizers.market_entity.trade import TradeVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 
 class PanelContentRenderer:
-    def render_session_panel(self, session_counter: SessionCounter):
-        return f"Session: {session_counter.current} / {session_counter.total}"
+    def render_session_pair_panel(self, session_counter: SessionCounter):
+        return (
+            f"Session: {session_counter.session} / {session_counter.total_sessions} | "
+            f"Pair: {session_counter.pair} / {session_counter.total_pairs}"
+        )
 
     def render_news_panel(self, news_data=None):
         if news_data:

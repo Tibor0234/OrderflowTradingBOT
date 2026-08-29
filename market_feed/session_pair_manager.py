@@ -12,9 +12,14 @@ class SessionPairManager:
     def __init__(self, conn: Connection):
         self.conn = conn
         self.session_pairs = self._load_session_pairs()
+        self.session_pair_counts = self._count_pairs_by_session()
         self.counter = SessionCounter(
-            current=0,
-            total=len(self.session_pairs)
+            session=None,
+            pair=0,
+            session_pair=0,
+            total_sessions=len(self.session_pair_counts),
+            total_pairs=0,
+            total_session_pairs=len(self.session_pairs)
         )
 
     def _load_session_pairs(self):
@@ -35,18 +40,29 @@ class SessionPairManager:
             """)
             return cursor.fetchall()
 
+    def _count_pairs_by_session(self) -> dict[int, int]:
+        counts = {}
+        for _, session_id, _, _ in self.session_pairs:
+            counts[session_id] = counts.get(session_id, 0) + 1
+        return counts
+
     def get_next(self):
         """Visszaadja a következő session pairt, vagy None ha nincs több."""
-        if self.counter.current >= self.counter.total:
+        if self.counter.session_pair >= self.counter.total_session_pairs:
             return None
 
-        session_pair = self.session_pairs[self.counter.current]
-        self.counter.current += 1
+        session_pair = self.session_pairs[self.counter.session_pair]
+        _, session_id, _, _ = session_pair
+
+        self.counter.pair = self.counter.pair + 1 if self.counter.session == session_id else 1
+        self.counter.session = session_id
+        self.counter.total_pairs = self.session_pair_counts[session_id]
+        self.counter.session_pair += 1
         return session_pair
 
     def has_next(self):
         """Ellenőrzi, hogy van-e további session pair."""
-        return self.counter.current < self.counter.total
+        return self.counter.session_pair < self.counter.total_session_pairs
 
     def get_counter(self):
         """Visszaadja az aktuális session counter objektumot."""

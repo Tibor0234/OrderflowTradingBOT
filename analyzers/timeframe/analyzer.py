@@ -1,4 +1,4 @@
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from data_managers.trade.subscriber import TradeManagerSubscriber
 from data_managers.trade.utils import TradeMessage
 from analyzers.timeframe.subscriber import TimeframeSubscriber

@@ -11,7 +11,7 @@ class BaseEquityCurve(ABC):
         pass
 
     @abstractmethod
-    def start_session(self):
+    def start_session_pair(self):
         pass
 
     @abstractmethod

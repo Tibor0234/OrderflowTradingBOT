@@ -2,12 +2,12 @@ from enum import Enum
 from decimal import Decimal
 from dataclasses import dataclass
 
-class ContextPeriod(Enum):
+class OHLCVPeriod(Enum):
     LAST_DAY = 'last_day'
     LAST_WEEK = 'last_week'
 
 @dataclass(slots=True)
-class ContextCandle:
+class OHLCVCandle:
     time: int
     open: Decimal
     high: Decimal
@@ -16,7 +16,7 @@ class ContextCandle:
     volume: Decimal
 
 @dataclass(slots=True)
-class ContextMessage:
-    period: ContextPeriod
+class OHLCVMessage:
+    period: OHLCVPeriod
     timeframe: str
-    candles: list[ContextCandle]
+    candles: list[OHLCVCandle]

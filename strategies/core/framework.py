@@ -1,5 +1,5 @@
 from decimal import Decimal
-from sessions.context import SessionContext
+from session_pairs.context import SessionPairContext
 from trading.market_entities.trade import Trade
 from trading.execution.position_manager import PositionManager
 from trading.market_entities.order import Order, MarketOrder, LimitOrder
@@ -9,8 +9,8 @@ from strategies.core.sequence_analyzers import SequenceAnalyzers
 from trading.execution.order_book import ExecutionOrderBook
 from trading.market_entities.utils import OrderType, Side
 from global_services.data.provider import DataProvider
-from analyzers.context_timeframe.model import ContextTimeframe
-from analyzers.context_volume_profile.model import ContextVolumeProfile
+from analyzers.ohlcv_timeframe.model import OHLCVTimeframe
+from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 from analyzers.microprice_deviation.model import MicropriceDeviation
 from analyzers.open_interest.model import OpenInterest
 from analyzers.order_book_imbalance.model import OrderBookImbalance
@@ -20,9 +20,9 @@ from analyzers.volume_profile.model import VolumeProfile
 from analyzers.big_trades.model import BigTrades
 
 class StrategyFramework(SequenceAnalyzers):
-    def __init__(self, position_manager: PositionManager, session_context: SessionContext, execution_order_book: ExecutionOrderBook):
+    def __init__(self, position_manager: PositionManager, session_pair_context: SessionPairContext, execution_order_book: ExecutionOrderBook):
         self.position_manager = position_manager
-        self.session_context = session_context
+        self.session_pair_context = session_pair_context
         self.order_book = execution_order_book
 
         self.orders = position_manager.orders
@@ -188,35 +188,35 @@ class StrategyFramework(SequenceAnalyzers):
 
     def get_price_distance(self, ticks: int | Decimal) -> Decimal:
         """Returns an instrument-independent price distance in ticks."""
-        metadata = self.session_context.get_instrument_metadata()
+        metadata = self.session_pair_context.get_instrument_metadata()
 
         return Decimal(str(ticks)) * metadata.tick_size
 
     # resource queries
 
-    def get_context_timeframe(self, name: str) -> ContextTimeframe:
-        return self.session_context.get_resource(name)
+    def get_ohlcv_timeframe(self, name: str) -> OHLCVTimeframe:
+        return self.session_pair_context.get_resource(name)
 
-    def get_context_volume_profile(self, name: str) -> ContextVolumeProfile:
-        return self.session_context.get_resource(name)
+    def get_ohlcv_volume_profile(self, name: str) -> OHLCVVolumeProfile:
+        return self.session_pair_context.get_resource(name)
 
     def get_microprice_deviation(self, name: str) -> MicropriceDeviation:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_open_interest(self, name: str) -> OpenInterest:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_order_book_imbalance(self, name: str) -> OrderBookImbalance:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_timeframe(self, name: str) -> Timeframe:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_volume_delta(self, name: str) -> VolumeDelta:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_volume_profile(self, name: str) -> VolumeProfile:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)
 
     def get_big_trades(self, name: str) -> BigTrades:
-        return self.session_context.get_resource(name)
+        return self.session_pair_context.get_resource(name)

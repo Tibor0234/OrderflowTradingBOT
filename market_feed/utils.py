@@ -6,9 +6,13 @@ class EventType(Enum):
     OB = 'api_ob'
     TR = 'ws_tr'
     NWS = 'nws'
-    CTX = 'ctx'
+    OHLCV = 'ohlcv'
 
 @dataclass(slots=True)
 class SessionCounter:
-    current: int
-    total: int
+    session: int | None
+    pair: int
+    session_pair: int
+    total_sessions: int
+    total_pairs: int
+    total_session_pairs: int

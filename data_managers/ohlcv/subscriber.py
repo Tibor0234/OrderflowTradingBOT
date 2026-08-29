@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from data_managers.context.utils import ContextPeriod
+from data_managers.ohlcv.utils import OHLCVPeriod
 
-class ContextManagerSubscriber(ABC):
+class OHLCVManagerSubscriber(ABC):
     def __init__(self):
-        self.period: ContextPeriod
+        self.period: OHLCVPeriod
 
     @abstractmethod
     def process_message(self, msg):

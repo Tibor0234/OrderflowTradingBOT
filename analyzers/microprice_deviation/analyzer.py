@@ -1,4 +1,4 @@
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from data_managers.order_book.utils import OrderBookMessage
 from data_managers.order_book.subscriber import OrderBookManagerSubscriber
 from analyzers.microprice_deviation.model import MicropriceDeviation

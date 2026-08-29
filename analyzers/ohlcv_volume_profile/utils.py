@@ -3,7 +3,7 @@ from decimal import Decimal
 from analyzers.volume_profile.utils import POC, ValueArea
 
 @dataclass(slots=True)
-class ContextPriceBin:
+class OHLCVPriceBin:
     low: Decimal
     size: Decimal
     volume: Decimal

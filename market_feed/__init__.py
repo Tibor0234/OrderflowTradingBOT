@@ -8,7 +8,7 @@ Komponensek:
 - SourceCoordinator: Adatforrások koordinációja
 - EventForwarder: Üzenetek irányítása
 - MessageExtractor: Metaadatok kinyerése
-- SessionCounter: Session feldolgozási progresszus
+- SessionCounter: Session és session-pair feldolgozási progresszus
 """
 
 from market_feed.feed import MarketFeed

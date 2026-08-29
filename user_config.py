@@ -7,8 +7,8 @@ from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.volume_delta.simple_analyzer import VolumeDeltaAnalyzer
 from analyzers.volume_delta.cumulative_analyzer import CVDAnalyzer
 from analyzers.volume_profile.analyzer import VolumeProfileAnalyzer
-from analyzers.context_timeframe.analyzer import ContextTimeframeAnalyzer, ContextPeriod
-from analyzers.context_volume_profile.analyzer import ContextVolumeProfileAnalyzer
+from analyzers.ohlcv_timeframe.analyzer import OHLCVTimeframeAnalyzer, OHLCVPeriod
+from analyzers.ohlcv_volume_profile.analyzer import OHLCVVolumeProfileAnalyzer
 
 #Strategies
 from strategies.executable.test import TestStrategy
@@ -58,11 +58,11 @@ def get_essentials():
 
         'oi': OpenInterestAnalyzer(aggregation_minutes=1, visualize=False),
 
-        'ctx_1d': ContextTimeframeAnalyzer(ContextPeriod.LAST_DAY),
-        #'ctx_1d_vp': ContextVolumeProfileAnalyzer(),
+        'ohlcv_1d': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_DAY),
+        #'ohlcv_1d_vp': OHLCVVolumeProfileAnalyzer(),
 
-        'ctx_1w': ContextTimeframeAnalyzer(ContextPeriod.LAST_WEEK),
-        #'ctx_1w_vp': ContextVolumeProfileAnalyzer(),
+        'ohlcv_1w': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_WEEK),
+        #'ohlcv_1w_vp': OHLCVVolumeProfileAnalyzer(),
     }
 
     visualizers = setup_resources(resources)

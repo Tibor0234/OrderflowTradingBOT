@@ -1,4 +1,4 @@
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from data_managers.news.subscriber import NewsManagerSubscriber
 from data_managers.news.utils import NewsMessage
 

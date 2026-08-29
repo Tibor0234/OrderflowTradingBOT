@@ -15,23 +15,17 @@ class BigTradesVisualizer(PriceChartVisualizer):
             x=[],
             y=[],
             mode="markers",
-            name="Big buys",
+            name="Big buy",
             marker=dict(color="#4CAF50", opacity=0.8),
-            hovertemplate=(
-                "Time: %{x}<br>Price: %{y}<br>"
-                "Quantity: %{customdata}<extra></extra>"
-            ),
+            showlegend=False,
         )
         self.sell_markers = go.Scattergl(
             x=[],
             y=[],
             mode="markers",
-            name="Big sells",
+            name="Big sell",
             marker=dict(color="#FF5722", opacity=0.8),
-            hovertemplate=(
-                "Time: %{x}<br>Price: %{y}<br>"
-                "Quantity: %{customdata}<extra></extra>"
-            ),
+            showlegend=False,
         )
 
     def get_traces(self):

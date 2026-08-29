@@ -23,7 +23,7 @@ class BaseStatistics(ABC):
         self.average_trade_duration = 0
 
     @abstractmethod
-    def session_start(self, starting_balance):
+    def session_pair_start(self, starting_balance):
         pass
 
     def update_on_trade_close(self, trade: Trade):

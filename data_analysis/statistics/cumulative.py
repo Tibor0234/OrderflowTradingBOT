@@ -5,7 +5,7 @@ class CumulativeStatistics(BaseStatistics):
         self.starting_balance = None
         super().__init__()
     
-    def session_start(self, starting_balance):
+    def session_pair_start(self, starting_balance):
         if self.starting_balance is None:
             self.starting_balance = starting_balance
             self.equity = starting_balance

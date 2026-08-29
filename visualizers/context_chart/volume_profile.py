@@ -1,10 +1,10 @@
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 from visualizers.context_chart.base import ContextChartVisualizer
-from analyzers.context_volume_profile.model import ContextVolumeProfile
+from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 
-class ContextVolumeProfileVisualizer(ContextChartVisualizer):
-    def __init__(self, volume_profile: ContextVolumeProfile):
+class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
+    def __init__(self, volume_profile: OHLCVVolumeProfile):
         self.volume_profile = volume_profile
         self.period = self.volume_profile.period
 

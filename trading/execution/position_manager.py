@@ -34,8 +34,8 @@ class PositionManager:
         self.statistics: list[BaseStatistics] = []
 
         EventBus().subscribe(EventBusMsgType.PRICE_UPDATE, self.on_price_update)
-        EventBus().subscribe(EventBusMsgType.SESSION_START, self.on_session_start)
-        EventBus().subscribe(EventBusMsgType.SESSION_END, self.on_session_end)
+        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_START, self.on_session_pair_start)
+        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.on_session_pair_end)
         EventBus().subscribe(EventBusMsgType.PROCESS_END, self.clear_state)
 
     @property
@@ -101,16 +101,16 @@ class PositionManager:
                 if not eq.is_initialized():
                     eq.update(self.total_balance)
 
-    def on_session_start(self):
+    def on_session_pair_start(self):
         self.clear_state()
 
         for eq in self.equity_curves:
-            eq.start_session()
+            eq.start_session_pair()
 
         for st in self.statistics:
-            st.session_start(self.total_balance)
+            st.session_pair_start(self.total_balance)
 
-    def on_session_end(self):
+    def on_session_pair_end(self):
         self.trade_execution.close_expired_trades()
 
     def clear_state(self):

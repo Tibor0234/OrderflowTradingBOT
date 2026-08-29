@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sessions.resource import Resource
+from session_pairs.resource import Resource
 from analyzers.timeframe.analyzer import TimeframeSubscriber
 from data_managers.trade.utils import TradeMessage
 from trading.market_entities.utils import Side

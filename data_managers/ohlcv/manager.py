@@ -1,23 +1,23 @@
 from decimal import Decimal
-from data_managers.context.utils import ContextPeriod
+from data_managers.ohlcv.utils import OHLCVPeriod
 from data_managers.base import DataManager
-from data_managers.context.subscriber import ContextManagerSubscriber
-from data_managers.context.utils import ContextMessage, ContextCandle
+from data_managers.ohlcv.subscriber import OHLCVManagerSubscriber
+from data_managers.ohlcv.utils import OHLCVMessage, OHLCVCandle
 
-class ContextManager(DataManager):
+class OHLCVManager(DataManager):
     def __init__(self):
-        self.subscribers: list[ContextManagerSubscriber] = []
+        self.subscribers: list[OHLCVManagerSubscriber] = []
 
-    def subscribe(self, subscriber: ContextManagerSubscriber):
+    def subscribe(self, subscriber: OHLCVManagerSubscriber):
         self.subscribers.append(subscriber)
         return self
 
     def forward_message(self, msg):
-        conv_msg = ContextMessage(
-            period=ContextPeriod(msg["period"]),
+        conv_msg = OHLCVMessage(
+            period=OHLCVPeriod(msg["period"]),
             timeframe=msg["interval"],
             candles=[
-                ContextCandle(
+                OHLCVCandle(
                     time=int(c["open_time"]),
                     open=Decimal(c["open"]),
                     high=Decimal(c["high"]),
