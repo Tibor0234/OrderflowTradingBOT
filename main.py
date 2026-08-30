@@ -28,7 +28,9 @@ from data_analysis.statistics.cumulative import CumulativeStatistics
 from trading.execution.order_book import ExecutionOrderBook
 from session_pairs.context import SessionPairContext
 from strategies.core.framework import StrategyFramework
-from report_generator.generator import ReportGenerator
+from report_generator.base import BaseReportGenerator
+from report_generator.cumulative import CumulativeReportGenerator
+from report_generator.session_pair_based import SessionPairBasedReportGenerator
 
 # ---- Visualization ----
 from dashboard.live_dashboard import LiveDashboard
@@ -138,10 +140,12 @@ if __name__ == "__main__":
             dashboard.add_context_chart_visualizer(visualizer)
 
     # Reports
-    report_generator = ReportGenerator(strategy_name=strategy.__class__.__name__) \
-        .set_equity_curve_visualizers(session_pair_equity_curve_visualizer, cumulative_equity_curve_visualizer) \
-        .set_statistics_visualizers(session_pair_statistics_visualizer, cumulative_statistics_visualizer) \
+    report_directory = BaseReportGenerator.create_report_directory(strategy.__class__.__name__)
+    session_pair_report_generator = SessionPairBasedReportGenerator(report_directory) \
+        .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_visualizer) \
         .set_session_counter(market_feed.session_counter)
+    cumulative_report_generator = CumulativeReportGenerator(report_directory) \
+        .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_visualizer)
 
     # ---- Start market feed in background thread ----
     threading.Thread(

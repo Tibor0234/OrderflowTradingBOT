@@ -6,84 +6,25 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from market_feed.utils import SessionCounter
-from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
-from visualizers.data_analysis.statistics import StatisticsVisualizer
-from global_services.events.bus import EventBus
-from global_services.events.utils import EventBusMsgType
-from global_services.data.provider import DataProvider
 
+class BaseReportGenerator:
+    def __init__(self, report_directory: Path):
+        self.report_directory = report_directory
 
-class ReportGenerator:
-    def __init__(self, strategy_name):
-        self.strategy_name = strategy_name
+    @staticmethod
+    def create_report_directory(strategy_name: str) -> Path:
+        started_at = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H-%M-%S")
+        report_directory = Path("reports") / f"{started_at}-{strategy_name}"
+        report_directory.mkdir(parents=True, exist_ok=True)
+        return report_directory
 
-        self.started_at = time.time()
-        self.report_directory = None
-        self.replay_start_time = None
-        self.session_pair_start_time = None
-
-        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_START, self._reset_session_pair_start_time)
-        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_session_pair_report)
-        EventBus().subscribe(EventBusMsgType.PRICE_UPDATE, self._capture_replay_start_time)
-        EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_replay_summary)
-
-    def _reset_session_pair_start_time(self):
-        self.session_pair_start_time = None
-
-    def _capture_replay_start_time(self):
-        if self.replay_start_time is None:
-            self.replay_start_time = DataProvider().get_time()
-
-        if self.session_pair_start_time is None:
-            self.session_pair_start_time = DataProvider().get_time()
-
-    def generate_session_pair_report(self):
-        symbol = DataProvider().get_symbol()
-        session_number = self.session_counter.session
-        report_directory = self._get_report_directory()
-        report_path = report_directory / f"session_{session_number}-{symbol}.pdf"
-
-        self._render_pdf(
-            report_path,
-            f"Session {session_number} - {symbol}",
-            self._get_session_time_range(),
-            self.session_pair_equity_visualizer,
-            self.session_pair_statistics_visualizer,
-        )
-
-    def _get_session_time_range(self):
-        if self.session_pair_start_time is None:
+    def _format_time_range(self, start_timestamp):
+        if start_timestamp is None:
             return "Session time unavailable"
 
-        start_time = datetime.fromtimestamp(self.session_pair_start_time / 1000)
-        end_time = datetime.fromtimestamp(DataProvider().get_time() / 1000)
+        start_time = datetime.fromtimestamp(start_timestamp / 1000)
+        end_time = datetime.fromtimestamp(self._get_current_time() / 1000)
         return f"{start_time:%Y-%m-%d %H:%M:%S} - {end_time:%Y-%m-%d %H:%M:%S}"
-
-    def generate_replay_summary(self):
-        if self.replay_start_time is None:
-            return
-
-        report_path = self._get_report_directory() / "summary.pdf"
-        self._render_pdf(
-            report_path,
-            "Summary",
-            self._get_replay_time_range(),
-            self.cumulative_equity_visualizer,
-            self.cumulative_statistics_visualizer,
-        )
-
-    def _get_replay_time_range(self):
-        start_time = datetime.fromtimestamp(self.replay_start_time / 1000)
-        end_time = datetime.fromtimestamp(DataProvider().get_time() / 1000)
-        return f"{start_time:%Y-%m-%d %H:%M:%S} - {end_time:%Y-%m-%d %H:%M:%S}"
-
-    def _get_report_directory(self):
-        if self.report_directory is None:
-            started_at = datetime.fromtimestamp(self.started_at).strftime("%Y-%m-%d_%H-%M-%S")
-            self.report_directory = Path("reports") / f"{started_at}-{self.strategy_name}"
-            self.report_directory.mkdir(parents=True, exist_ok=True)
-        return self.report_directory
 
     def _render_pdf(self, report_path, title, time_range, equity_visualizer, statistics_visualizer):
         page_width, page_height = A4
@@ -207,9 +148,7 @@ class ReportGenerator:
             line = shape.get("line", {})
             line_color = line.get("color", "#ffffff")
             if line_color.startswith("rgba"):
-                line_color = colors.HexColor(
-                    "#ffffff" if "255,255,255" in line_color else "#ff4100"
-                )
+                line_color = colors.HexColor("#ffffff" if "255,255,255" in line_color else "#ff4100")
             else:
                 line_color = colors.HexColor(line_color)
 
@@ -228,17 +167,3 @@ class ReportGenerator:
     def _value_color(value):
         style = getattr(value, "style", {})
         return colors.HexColor(style.get("color", "#ffffff"))
-
-    def set_session_counter(self, session_counter: SessionCounter):
-        self.session_counter = session_counter
-        return self
-
-    def set_equity_curve_visualizers(self, session_pair_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
-        self.session_pair_equity_visualizer = session_pair_visualizer
-        self.cumulative_equity_visualizer = cumulative_visualizer
-        return self
-    
-    def set_statistics_visualizers(self, session_pair_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
-        self.session_pair_statistics_visualizer = session_pair_visualizer
-        self.cumulative_statistics_visualizer = cumulative_visualizer
-        return self

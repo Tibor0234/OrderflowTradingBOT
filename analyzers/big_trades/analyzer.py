@@ -1,3 +1,4 @@
+from bisect import bisect_left, insort
 from collections import deque
 from decimal import Decimal
 from math import ceil
@@ -22,6 +23,7 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 		self.sample_size = sample_size
 		self.top_rate = Decimal(str(top_pct)) / Decimal(100)
 		self._quantities: deque[Decimal] = deque(maxlen=sample_size)
+		self._sorted_quantities: list[Decimal] = []
 
 		self.visualize = visualize
 
@@ -35,6 +37,7 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 	def reset(self):
 		self.model.content.clear()
 		self._quantities.clear()
+		self._sorted_quantities.clear()
 
 	def process_message(self, msg: TradeMessage):
 		if self.is_big_trade(msg.quantity):
@@ -45,15 +48,23 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 				side=msg.side,
 			))
 
-		self._quantities.append(msg.quantity)
+		self._add_quantity(msg.quantity)
+
+	def _add_quantity(self, quantity: Decimal):
+		if len(self._quantities) == self.sample_size:
+			expired_quantity = self._quantities.popleft()
+			expired_index = bisect_left(self._sorted_quantities, expired_quantity)
+			self._sorted_quantities.pop(expired_index)
+
+		self._quantities.append(quantity)
+		insort(self._sorted_quantities, quantity)
 
 	def is_big_trade(self, quantity: Decimal) -> bool:
 		"""Returns whether quantity is in the rolling top volume range."""
 		if not self._quantities:
 			return False
 
-		sorted_quantities = sorted(self._quantities)
-		rank = ceil((1 - self.top_rate) * len(sorted_quantities))
-		threshold = sorted_quantities[max(0, rank - 1)]
+		rank = ceil((1 - self.top_rate) * len(self._sorted_quantities))
+		threshold = self._sorted_quantities[max(0, rank - 1)]
 
 		return quantity >= threshold

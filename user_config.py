@@ -51,7 +51,7 @@ def get_essentials():
 
     # 🛠 Resources
     resources = {
-        #'big_trades': big_trades,
+        'big_trades': big_trades,
         'tf_1m': TimeframeAnalyzer(candle_seconds=60),
         'cvd_1m': CVDAnalyzer(visualize=True),
         #'vp_1m': VolumeProfileAnalyzer(),
