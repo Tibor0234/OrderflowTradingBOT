@@ -94,6 +94,7 @@ class OrderExecutionManager:
                 raise ValueError("Cannot add opposite side order to existing trade")
 
             trade.update_on_fill(execution_price, filled_value, order.leverage)
+            trade.update_metadata(order.metadata)
             fee = trade.charge_fee_from_value(filled_value, fee_rate)
         else:
             trade = Trade.convert_from_order(order, execution_price, filled_value)

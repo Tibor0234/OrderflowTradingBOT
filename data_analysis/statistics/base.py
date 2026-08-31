@@ -13,6 +13,8 @@ class BaseStatistics(ABC):
 
     def _reset(self):
         self.total_trades = 0
+        self.trades_won = 0
+        self.trades_lost = 0
         self.winrate = 0
         self.pnl = 0
         self.roi = 0
@@ -31,9 +33,11 @@ class BaseStatistics(ABC):
         self.pnl += trade.realized_pnl
 
         if trade.realized_pnl > 0:
+            self.trades_won += 1
             self.winrate = ((self.winrate * (self.total_trades - 1)) + 1) / self.total_trades
             self.average_win = ((self.average_win * (self.total_trades - 1)) + trade.realized_pnl) / self.total_trades
         else:
+            self.trades_lost += 1
             self.winrate = (self.winrate * (self.total_trades - 1)) / self.total_trades
             self.average_loss = ((self.average_loss * (self.total_trades - 1)) + trade.realized_pnl) / self.total_trades
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 from typing import TypeVar
 from session_pairs.context import SessionPairContext
@@ -35,78 +36,86 @@ class StrategyFramework(SequenceAnalyzers):
 
     # place orders
 
-    def place_limit_order(self, side, value, entry_price, leverage, kill=None, kill_after_fill=None):
+    def place_limit_order(self, side, value, entry_price, leverage, kill=None, kill_after_fill=None, metadata=None):
         order = LimitOrder(
             side=Side(side),
             value=value,
             entry_price=entry_price,
             leverage=leverage,
             kill=kill * 1000 if kill is not None else None,
-            kill_after_fill=kill_after_fill * 1000 if kill_after_fill is not None else None
+            kill_after_fill=kill_after_fill * 1000 if kill_after_fill is not None else None,
+            metadata=metadata
         )
         self.position_manager.place_order(order)
         return order
     
-    def place_market_order(self, side, value, leverage):
+    def place_market_order(self, side, value, leverage, metadata=None):
         order = MarketOrder(
             side=Side(side),
             value=value,
-            leverage=leverage
+            leverage=leverage,
+            metadata=metadata
         )
         self.position_manager.place_order(order)
         return order
     
-    def place_increase_limit_order(self, source: Order | Trade, value, entry_price, leverage, kill_after_fill=None):
+    def place_increase_limit_order(self, source: Order | Trade, value, entry_price, leverage, kill_after_fill=None, metadata=None):
         order = IncreaseLimitOrder(
             value=value,
             entry_price=entry_price,
             leverage=leverage,
-            kill_after_fill=kill_after_fill * 1000 if kill_after_fill is not None else None
+            kill_after_fill=kill_after_fill * 1000 if kill_after_fill is not None else None,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
         return order
     
-    def place_increase_marker_order(self, source: Order | Trade, value, leverage):
+    def place_increase_marker_order(self, source: Order | Trade, value, leverage, metadata=None):
         order = IncreaseMarketOrder(
             value=value,
-            leverage=leverage
+            leverage=leverage,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
         return order
     
-    def place_take_profit_limit(self, source: Order | Trade, price, pct):
+    def place_take_profit_limit(self, source: Order | Trade, price, pct, metadata=None):
         order = TakeProfit(
             price=price,
             type=OrderType.LIMIT,
-            pct=pct
+            pct=pct,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
         return order
     
-    def place_take_profit_market(self, source: Order | Trade, price, pct):
+    def place_take_profit_market(self, source: Order | Trade, price, pct, metadata=None):
         order = TakeProfit(
             price=price,
             type=OrderType.MARKET,
-            pct=pct
+            pct=pct,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
         return order
     
-    def place_stop_loss(self, source: Order | Trade, price):
+    def place_stop_loss(self, source: Order | Trade, price, metadata=None):
         order = StopLoss(
-            price=price
+            price=price,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
         return order
     
-    def place_reduce_only_order(self, source: Order | Trade, pct):
+    def place_reduce_only_order(self, source: Order | Trade, pct, metadata=None):
         order = ReduceOnly(
-            pct=pct
+            pct=pct,
+            metadata=metadata
         )
         source.link(order)
         self.position_manager.place_order(order)
@@ -188,6 +197,24 @@ class StrategyFramework(SequenceAnalyzers):
     
     def get_current_time(self):
         return DataProvider().get_time()
+
+    # timestamp queries
+
+    def get_datetime(self, timestamp: int | None = None) -> datetime:
+        timestamp = self.get_current_time() if timestamp is None else timestamp
+        return datetime.fromtimestamp(timestamp / 1000)
+
+    def is_weekday(self, timestamp: int | None = None) -> bool:
+        return self.get_datetime(timestamp).weekday() < 5
+
+    def get_weekday(self, timestamp: int | None = None) -> int:
+        return self.get_datetime(timestamp).weekday()
+
+    def get_hour(self, timestamp: int | None = None) -> int:
+        return self.get_datetime(timestamp).hour
+
+    def get_minute(self, timestamp: int | None = None) -> int:
+        return self.get_datetime(timestamp).minute
 
     # session context queries
 

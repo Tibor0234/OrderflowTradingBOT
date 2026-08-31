@@ -53,7 +53,7 @@ class OrderVisualizer(MarketEntityVisualizer):
                 continue
 
             side = html.Span(
-                'LONG' if order.side == Side.BUY else 'SHORT',
+                'BUY' if order.side == Side.BUY else 'SELL',
                 style={
                     "color": "green" if order.side == Side.BUY else "#FF5722"
                 }

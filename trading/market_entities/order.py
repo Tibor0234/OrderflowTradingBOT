@@ -15,7 +15,8 @@ class Order(ABC):
         type: OrderType,
         leverage: float,
         kill: int = None,
-        kill_after_fill: int = None
+        kill_after_fill: int = None,
+        metadata: dict[str, object] | None = None,
     ):
         self.id = uuid.uuid4()
         self.type: OrderType = type
@@ -23,6 +24,7 @@ class Order(ABC):
         self.entry_price: Decimal = entry_price
         self.value: Decimal = value
         self.leverage: Decimal = Decimal(leverage)
+        self.metadata = dict(metadata) if metadata else {}
 
         # Kill timings
         self.kill: int | None = kill
@@ -75,13 +77,13 @@ class Order(ABC):
         return (price - self.entry_price) * (-self.side.value) >= 0
     
     def convert_to_increase_order(self) -> IncreaseLimitOrder:
-        return IncreaseLimitOrder(self.value, self.entry_price, self.leverage, self.kill_after_fill)
+        return IncreaseLimitOrder(self.value, self.entry_price, self.leverage, self.kill_after_fill, self.metadata)
 
 
 class LimitOrder(Order):
-    def __init__(self, side: Side, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill: int = None, kill_after_fill: int = None):
-        super().__init__(side=side, value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill=kill, kill_after_fill=kill_after_fill)
+    def __init__(self, side: Side, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill: int = None, kill_after_fill: int = None, metadata: dict[str, object] | None = None):
+        super().__init__(side=side, value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill=kill, kill_after_fill=kill_after_fill, metadata=metadata)
 
 class MarketOrder(Order):
-    def __init__(self, side: Side, value: Decimal, leverage: float = 1.0):
-        super().__init__(side=side, value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill=None, kill_after_fill=None)
+    def __init__(self, side: Side, value: Decimal, leverage: float = 1.0, metadata: dict[str, object] | None = None):
+        super().__init__(side=side, value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill=None, kill_after_fill=None, metadata=metadata)

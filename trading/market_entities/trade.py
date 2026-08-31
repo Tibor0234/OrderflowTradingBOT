@@ -16,13 +16,18 @@ class Trade:
             side=order.side,
             value=value,
             leverage=order.leverage,
+            metadata=order.metadata,
         )
 
-    def __init__(self, id: uuid.UUID, execution_price, side: Side, value, leverage):
+    def __init__(self, id: uuid.UUID, execution_price, side: Side, value, leverage, metadata: dict[str, object] | None = None):
         self.id = id
         self.execution_price = execution_price
         self.side = side
         self.value = value
+        self.metadata = dict(metadata) if metadata else {}
+        self.invested_value = value
+        self.closed_value = Decimal(0)
+        self.avg_close_price = Decimal(0)
         self.leverage = leverage
         self.realized_pnl = 0
         self.open_time = DataProvider().get_time()
@@ -46,6 +51,10 @@ class Trade:
         self.execution_price = (self.execution_price * self.value + execution_price * value) / total_value
         self.leverage = (self.leverage * self.value + leverage * value) / total_value
         self.value = total_value
+        self.invested_value += value
+
+    def update_metadata(self, metadata: dict[str, object]):
+        self.metadata.update(metadata)
 
     @property
     def floating_pnl(self):
@@ -68,6 +77,12 @@ class Trade:
         float_pnl = self.floating_pnl_from_price(execuiton_price)
 
         closed_value = self.value * close_rate
+        total_closed_value = self.closed_value + closed_value
+        self.avg_close_price = (
+            (self.avg_close_price * self.closed_value + execuiton_price * closed_value)
+            / total_closed_value
+        )
+        self.closed_value = total_closed_value
         self.value -= closed_value
 
         realized = float_pnl * close_rate

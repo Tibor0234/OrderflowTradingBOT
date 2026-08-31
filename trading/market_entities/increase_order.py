@@ -4,13 +4,14 @@ from trading.market_entities.utils import Side, OrderType
 from global_services.data.provider import DataProvider
 
 class IncreaseOrder():
-    def __init__(self, value: Decimal, entry_price: Decimal, type: OrderType, leverage: float = 1.0, kill_after_fill = None):
+    def __init__(self, value: Decimal, entry_price: Decimal, type: OrderType, leverage: float = 1.0, kill_after_fill = None, metadata: dict[str, object] | None = None):
         self.source_id: uuid.UUID | None = None
         self.side: Side | None = None
         self.type = type
         self.value = Decimal(value)
         self.entry_price = Decimal(entry_price) if entry_price is not None else None
         self.leverage = Decimal(leverage)
+        self.metadata = dict(metadata) if metadata else {}
 
         self.fill_time = None
         self.kill_after_fill = kill_after_fill
@@ -38,9 +39,9 @@ class IncreaseOrder():
         return (now - self.fill_time) >= self.kill_after_fill
 
 class IncreaseLimitOrder(IncreaseOrder):
-    def __init__(self, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill_after_fill: int = None):
-        super().__init__(value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill_after_fill=kill_after_fill)
+    def __init__(self, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill_after_fill: int = None, metadata: dict[str, object] | None = None):
+        super().__init__(value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill_after_fill=kill_after_fill, metadata=metadata)
 
 class IncreaseMarketOrder(IncreaseOrder):
-    def __init__(self, value: Decimal, leverage: float = 1.0):
-        super().__init__(value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill_after_fill=None)
+    def __init__(self, value: Decimal, leverage: float = 1.0, metadata: dict[str, object] | None = None):
+        super().__init__(value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill_after_fill=None, metadata=metadata)

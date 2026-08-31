@@ -136,7 +136,7 @@ class DashboardLayout:
             children=[
                 html.Div(
                     style={
-                        "flex": "3",
+                        "flex": "1.25",
                         "display": "flex",
                         "flexDirection": "row"
                     },
@@ -148,7 +148,7 @@ class DashboardLayout:
 
                 html.Div(
                     style={
-                        "flex": "1.5",
+                        "flex": "1",
                         "display": "flex",
                         "flexDirection": "column",
                         "borderTop": "1px solid #333",
@@ -167,6 +167,15 @@ class DashboardLayout:
                         ),
                         html.Div(
                             id="order-panel",
+                            style={
+                                "flex": "1",
+                                "padding": "10px",
+                                "borderBottom": "1px solid #333",
+                                "backgroundColor": "#2a2a2a"
+                            },
+                        ),
+                        html.Div(
+                            id="stop-order-panel",
                             style={
                                 "flex": "1",
                                 "padding": "10px",
@@ -197,7 +206,7 @@ class DashboardLayout:
 
                 dcc.Graph(
                     id="session-pair-equity-curve",
-                    style={"flex": "1.5"},
+                    style={"flex": "1"},
                     figure=go.Figure(),
                     config={"displayModeBar": False},
                 ),
@@ -205,7 +214,7 @@ class DashboardLayout:
                 html.Div(
                     id="session-pair-stats-panel",
                     style={
-                        "flex": "2",
+                        "flex": "1",
                         "padding": "10px",
                         "borderTop": "1px solid #333",
                         "overflowY": "auto",
@@ -236,7 +245,7 @@ class DashboardLayout:
 
                 dcc.Graph(
                     id="cumulative-equity-curve",
-                    style={"flex": "1.5"},
+                    style={"flex": "1"},
                     figure=go.Figure(),
                     config={"displayModeBar": False},
                 ),
@@ -244,7 +253,7 @@ class DashboardLayout:
                 html.Div(
                     id="cumulative-stats-panel",
                     style={
-                        "flex": "2",
+                        "flex": "1",
                         "padding": "10px",
                         "borderTop": "1px solid #333",
                         "overflowY": "auto",

@@ -95,6 +95,7 @@ class TradeExecutionManager:
             fee_value = order_value
             fee_rate = self.taker_fee_rate
 
+        trade.update_metadata(stop_order.metadata)
         trade.charge_fee_from_value(fee_value, fee_rate)
         closed_value, realized = trade.close_trade_partial(execution_price, filled_close_rate)
         self.position_manager.realized_balance += closed_value + realized

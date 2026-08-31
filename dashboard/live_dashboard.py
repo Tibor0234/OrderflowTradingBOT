@@ -10,6 +10,7 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from visualizers.context_chart.base import ContextChartVisualizer
 from visualizers.market_entity.trade import TradeVisualizer
 from visualizers.market_entity.order import OrderVisualizer
+from visualizers.market_entity.stop_order import StopOrderVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 from market_feed.utils import SessionCounter
@@ -33,6 +34,7 @@ class LiveDashboard:
 
         self.trade_visualizer = None
         self.order_visualizer = None
+        self.stop_order_visualizer = None
 
         self.session_counter = None
 
@@ -48,11 +50,11 @@ class LiveDashboard:
     def _build_dashboard_snapshot(self):
         figures = {
             "Price chart 0": self.chart_renderer.build_price_chart(
-                [self.trade_visualizer, self.order_visualizer],
+                [self.trade_visualizer, self.order_visualizer, self.stop_order_visualizer],
                 self._get_price_visualizers(0)
             ),
             "Price chart 1": self.chart_renderer.build_price_chart(
-                [self.trade_visualizer, self.order_visualizer],
+                [self.trade_visualizer, self.order_visualizer, self.stop_order_visualizer],
                 self._get_price_visualizers(1)
             ),
             "Last week chart": self.chart_renderer.build_context_chart(
@@ -79,6 +81,9 @@ class LiveDashboard:
             "Orders": self.panel_content_renderer.render_execution_panel(
                 self.order_visualizer
             ),
+            "Stop orders": self.panel_content_renderer.render_execution_panel(
+                self.stop_order_visualizer
+            ),
             "Session pair statistics": self.panel_content_renderer.render_stats_panel(
                 self.session_pair_statistics_visualizer
             ),
@@ -102,6 +107,7 @@ class LiveDashboard:
             Output("session-pair-panel", "children"),
             Output("trade-panel", "children"),
             Output("order-panel", "children"),
+            Output("stop-order-panel", "children"),
             Output("session-pair-stats-panel", "children"),
             Output("cumulative-stats-panel", "children"),
             Input("trigger-check", "n_intervals")
@@ -134,9 +140,10 @@ class LiveDashboard:
         self.session_counter = session_counter
         return self
 
-    def set_execution_visualizers(self, trade_visualizer: TradeVisualizer, order_visualizer: OrderVisualizer):
+    def set_execution_visualizers(self, trade_visualizer: TradeVisualizer, order_visualizer: OrderVisualizer, stop_order_visualizer: StopOrderVisualizer):
         self.trade_visualizer = trade_visualizer
         self.order_visualizer = order_visualizer
+        self.stop_order_visualizer = stop_order_visualizer
         return self
 
     def set_equity_curve_visualizers(self, session_pair_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):

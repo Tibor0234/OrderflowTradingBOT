@@ -2,38 +2,41 @@ from dash import html
 from data_analysis.statistics.base import BaseStatistics
 from visualizers.utils import colorize_number, format_number
 
+def _format_trade_duration(seconds: float) -> str:
+    hours = int(seconds // 3600)
+    remaining_seconds = seconds % 3600
+    minutes = int(remaining_seconds // 60)
+    remaining_seconds = int(remaining_seconds % 60)
+    return f"{hours:02d}:{minutes:02d}:{remaining_seconds:02d}"
+
 class StatisticsVisualizer:
-    def __init__(self, statistics: BaseStatistics):
+    # Maps config key -> (display label, value extractor)
+    STAT_DEFINITIONS = {
+        "total_trades": ("Total Trades", lambda s: s.total_trades),
+        "trades_won": ("Trades Won", lambda s: s.trades_won),
+        "trades_lost": ("Trades Lost", lambda s: s.trades_lost),
+        "winrate": ("Win Rate", lambda s: colorize_number(s.winrate, min_value=0.5, is_percentage=True)),
+        "roi": ("ROI", lambda s: colorize_number(s.roi, min_value=0, is_percentage=True)),
+        "max_drawdown": ("Max Drawdown", lambda s: f"{s.max_drawdown:.2%}"),
+        "pnl": ("PnL (USD)", lambda s: colorize_number(s.pnl, min_value=0)),
+        "average_win": ("Avg Win (USD)", lambda s: format_number(s.average_win)),
+        "average_loss": ("Avg Loss (USD)", lambda s: format_number(s.average_loss)),
+        "expectency": ("Expectancy (USD)", lambda s: colorize_number(s.expectency, min_value=0)),
+        "average_trade_duration": ("Avg Trade Duration (h:m:s)", lambda s: _format_trade_duration(s.average_trade_duration)),
+    }
+
+    DEFAULT_STATS = list(STAT_DEFINITIONS.keys())
+
+    def __init__(self, statistics: BaseStatistics, stats: list[str] = None):
         self.statistics = statistics
+        self.stats = stats if stats is not None else self.DEFAULT_STATS
 
     def get_panel_content(self):
-        categories = [
-            "Total Trades",
-            "Win Rate",
-            "ROI",
-            "Max Drawdown",
-            "PnL (USD)",
-            "Avg Win (USD)",
-            "Avg Loss (USD)",
-            "Expectancy (USD)",
-            "Avg Trade Duration (m:s)"
-        ]
-        
-        def format_trade_duration(seconds: float) -> str:
-            minutes = int(seconds // 60)
-            seconds = int(seconds % 60)
-            return f"{minutes:02d}:{seconds:02d}"
-
-        values = [
-            self.statistics.total_trades,
-            colorize_number(self.statistics.winrate, min_value=0.5, is_percentage=True),
-            colorize_number(self.statistics.roi, min_value=0, is_percentage=True),
-            f"{self.statistics.max_drawdown:.2%}",
-            colorize_number(self.statistics.pnl, min_value=0),
-            format_number(self.statistics.average_win),
-            format_number(self.statistics.average_loss),
-            colorize_number(self.statistics.expectency, min_value=0),
-            format_trade_duration(self.statistics.average_trade_duration)
-        ]
+        categories = []
+        values = []
+        for key in self.stats:
+            label, get_value = self.STAT_DEFINITIONS[key]
+            categories.append(label)
+            values.append(get_value(self.statistics))
 
         return categories, values

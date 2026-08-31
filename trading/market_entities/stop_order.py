@@ -4,12 +4,13 @@ from trading.market_entities.utils import Side, OrderType
 from global_services.data.provider import DataProvider
 
 class StopOrder:
-    def __init__(self, price: Decimal, type: OrderType, close_rate: float = 1.0):
+    def __init__(self, price: Decimal, type: OrderType, close_rate: float = 1.0, metadata: dict[str, object] | None = None):
         self.source_id: uuid.UUID | None = None
         self.side: Side | None = None
         self.type = type
         self.price = Decimal(price) if price is not None else None
         self.close_rate = Decimal(close_rate)
+        self.metadata = dict(metadata) if metadata else {}
 
     def set_from_source(self, source_id: uuid.UUID, side: Side):
         self.source_id = source_id
@@ -26,15 +27,15 @@ class StopOrder:
     
     
 class TakeProfit(StopOrder):
-    def __init__(self, price: Decimal, type: OrderType, pct: float):
-        super().__init__(price=price, type=type, close_rate=pct/100)
+    def __init__(self, price: Decimal, type: OrderType, pct: float, metadata: dict[str, object] | None = None):
+        super().__init__(price=price, type=type, close_rate=pct/100, metadata=metadata)
 
     def is_triggered(self):
         return super().is_triggered(-self.side.value)
 
 class StopLoss(StopOrder):
-    def __init__(self, price: Decimal):
-        super().__init__(price=price, type=OrderType.MARKET, close_rate=1.0)
+    def __init__(self, price: Decimal, metadata: dict[str, object] | None = None):
+        super().__init__(price=price, type=OrderType.MARKET, close_rate=1.0, metadata=metadata)
 
     def is_triggered(self):
         return super().is_triggered(self.side.value)
@@ -44,5 +45,8 @@ class LiquidationOrder(StopLoss):
         super().__init__(price)
 
 class ReduceOnly(StopOrder):
-    def __init__(self, pct: float):
-        super().__init__(price=None, type=OrderType.MARKET, close_rate=pct/100)
+    def __init__(self, pct: float, metadata: dict[str, object] | None = None):
+        super().__init__(price=None, type=OrderType.MARKET, close_rate=pct/100, metadata=metadata)
+
+    def is_triggered(self) -> bool:
+        return True

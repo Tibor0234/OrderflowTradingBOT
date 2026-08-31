@@ -32,18 +32,20 @@ from strategies.core.framework import StrategyFramework
 from report_generator.base import BaseReportGenerator
 from report_generator.cumulative import CumulativeReportGenerator
 from report_generator.session_pair_based import SessionPairBasedReportGenerator
+from report_generator.trade_export import TradeExcelExporter
 
 # ---- Visualization ----
 from dashboard.live_dashboard import LiveDashboard
 from visualizers.market_entity.trade import TradeVisualizer
 from visualizers.market_entity.order import OrderVisualizer
+from visualizers.market_entity.stop_order import StopOrderVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 from visualizers.price_chart.base import PriceChartVisualizer
 from visualizers.context_chart.base import ContextChartVisualizer
 
 # ---- User config ----
-from user_config import UserConfig
+from resource_config import ResourceConfig
 
 # ------------------- MAIN -------------------
 if __name__ == "__main__":
@@ -51,8 +53,8 @@ if __name__ == "__main__":
         config = yaml.safe_load(config_file)
 
     # ---- Essentials ----
-    user_config = UserConfig()
-    strategy, resources, visualizers = user_config.get_essentials()
+    resource_config = ResourceConfig()
+    strategy, resources, visualizers = resource_config.get_essentials()
 
     dotenv.load_dotenv()
 
@@ -130,15 +132,23 @@ if __name__ == "__main__":
     # Trade & equity visualizers
     trade_visualizer = TradeVisualizer(position_manager.trades)
     order_visualizer = OrderVisualizer(position_manager.orders, position_manager.increase_orders)
+    stop_order_visualizer = StopOrderVisualizer(position_manager.stop_orders)
     session_pair_equity_curve_visualizer = EquityCurveVisualizer(session_pair_based_equity_curve)
     cumulative_equity_curve_visualizer = EquityCurveVisualizer(cumulative_equity_curve)
-    session_pair_statistics_visualizer = StatisticsVisualizer(session_pair_statistics)
-    cumulative_statistics_visualizer = StatisticsVisualizer(cumulative_statistics)
+    stats_config = config.get("statistics", {})
+    dashboard_stats = [key for key, cfg in stats_config.items() if cfg.get("dashboard", True)]
+    report_stats = [key for key, cfg in stats_config.items() if cfg.get("report", True)]
+
+    def build_statistics_visualizers(stats_keys):
+        return StatisticsVisualizer(session_pair_statistics, stats_keys), StatisticsVisualizer(cumulative_statistics, stats_keys)
+
+    session_pair_statistics_dashboard_visualizer, cumulative_statistics_dashboard_visualizer = build_statistics_visualizers(dashboard_stats)
+    session_pair_statistics_report_visualizer, cumulative_statistics_report_visualizer = build_statistics_visualizers(report_stats)
 
     dashboard \
-        .set_execution_visualizers(trade_visualizer, order_visualizer) \
+        .set_execution_visualizers(trade_visualizer, order_visualizer, stop_order_visualizer) \
         .set_equity_curve_visualizers(session_pair_equity_curve_visualizer, cumulative_equity_curve_visualizer) \
-        .set_statistics_visualizers(session_pair_statistics_visualizer, cumulative_statistics_visualizer) \
+        .set_statistics_visualizers(session_pair_statistics_dashboard_visualizer, cumulative_statistics_dashboard_visualizer) \
         .set_session_counter(market_feed.session_counter)
 
     # Price chart & context visualizers
@@ -151,10 +161,12 @@ if __name__ == "__main__":
     # Reports
     report_directory = BaseReportGenerator.create_report_directory(strategy.__class__.__name__)
     session_pair_report_generator = SessionPairBasedReportGenerator(report_directory) \
-        .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_visualizer) \
+        .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_report_visualizer) \
         .set_session_counter(market_feed.session_counter)
     cumulative_report_generator = CumulativeReportGenerator(report_directory) \
-        .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_visualizer)
+        .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_report_visualizer)
+    trade_excel_exporter = TradeExcelExporter(report_directory) \
+        .set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----
     threading.Thread(

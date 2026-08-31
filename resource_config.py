@@ -16,10 +16,13 @@ from analyzers.ohlcv_volume_profile.analyzer import OHLCVVolumeProfileAnalyzer
 # Strategies
 from strategies.executable.test import TestStrategy
 
-class UserConfig:
+class ResourceConfig:
 
     def get_essentials(self):
+        # ==================== USER CONFIG ====================
+        # Select the strategy to execute.
         strategy = TestStrategy()
+
         resources = self._build_resources()
         self._resolve_price_chart_slots(resources)
         visualizers = self._setup_resources(resources)
@@ -27,32 +30,13 @@ class UserConfig:
         return strategy, resources, visualizers
 
     def _build_resources(self) -> dict[str, Resource]:
+        # ==================== USER CONFIG ====================
+        # Declare the analyzers, their names, and their settings.
         return {
-            "big_trades": BigTradesAnalyzer(
-                length=100,
-                top_pct=2.3,
-                visualize=True,
-            ),
-
             "tf_1m": TimeframeAnalyzer(
                 candle_seconds=60
             ),
-            
-            
-
-            "tf_5m": TimeframeAnalyzer(
-                candle_seconds=300,
-                length=50,
-            ),
-            "cvd_5m": CVDAnalyzer(),
-            "vp_5m": VolumeProfileAnalyzer(),
-
-            "oi": OpenInterestAnalyzer(
-                aggregation_minutes=5,
-                length=50,
-                visualize=True,
-                chart_slot=1
-            ),
+            "vd_1m": VolumeDeltaAnalyzer(),
 
             "ohlcv_1d": OHLCVTimeframeAnalyzer(
                 OHLCVPeriod.LAST_DAY
