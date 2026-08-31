@@ -1,6 +1,7 @@
 import inspect
 
 from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 
 # Resources
 from analyzers.timeframe.analyzer import TimeframeAnalyzer
@@ -20,6 +21,7 @@ class UserConfig:
     def get_essentials(self):
         strategy = TestStrategy()
         resources = self._build_resources()
+        self._resolve_price_chart_slots(resources)
         visualizers = self._setup_resources(resources)
 
         return strategy, resources, visualizers
@@ -35,19 +37,21 @@ class UserConfig:
             "tf_1m": TimeframeAnalyzer(
                 candle_seconds=60
             ),
-            "vd_1m": VolumeDeltaAnalyzer(
-                big_trades=BigTradesAnalyzer(
-                    length=100,
-                    top_pct=1,
-                    visualize=False,
-                ),
-                visualize=True,
+            
+            
+
+            "tf_5m": TimeframeAnalyzer(
+                candle_seconds=300,
+                length=50,
             ),
-            "vp_1m": VolumeProfileAnalyzer(),
+            "cvd_5m": CVDAnalyzer(),
+            "vp_5m": VolumeProfileAnalyzer(),
 
             "oi": OpenInterestAnalyzer(
-                aggregation_minutes=1, 
-                visualize=False
+                aggregation_minutes=5,
+                length=50,
+                visualize=True,
+                chart_slot=1
             ),
 
             "ohlcv_1d": OHLCVTimeframeAnalyzer(
@@ -60,6 +64,23 @@ class UserConfig:
             ),
             "ohlcv_1w_vp": OHLCVVolumeProfileAnalyzer(),
         }
+
+    @staticmethod
+    def _resolve_price_chart_slots(resources: dict[str, Resource]):
+        timeframes = [
+            resource
+            for resource in resources.values()
+            if isinstance(resource, TimeframeAnalyzer)
+        ]
+        if len(timeframes) > 2:
+            raise ValueError("At most two TimeframeAnalyzer resources can be declared")
+
+        for slot, timeframe in enumerate(timeframes):
+            timeframe.resolve_chart_slot(slot)
+
+        for resource in resources.values():
+            if isinstance(resource, PriceChartResource) and not isinstance(resource, TimeframeAnalyzer):
+                resource.resolve_chart_slot(0)
 
     def _setup_resources(self, resources: dict[str, Resource]) -> list:
         visualizers = []

@@ -3,7 +3,7 @@ from collections import deque
 from decimal import Decimal
 from math import ceil
 
-from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 from data_managers.trade.subscriber import TradeManagerSubscriber
 from data_managers.trade.utils import TradeMessage
 from analyzers.big_trades.model import BigTrades
@@ -12,8 +12,9 @@ from global_services.events.bus import EventBus
 from global_services.events.utils import EventBusMsgType
 
 
-class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
-	def __init__(self, length=50, sample_size=500, top_pct=5, visualize=True):
+class BigTradesAnalyzer(PriceChartResource, TradeManagerSubscriber):
+	def __init__(self, length=100, sample_size=500, top_pct=5, visualize=True, chart_slot: int | None = None):
+		super().__init__(chart_slot)
 		if length < 1:
 			raise ValueError("length must be at least 1")
 		if sample_size < 1:
@@ -34,7 +35,7 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 	def visualizer(self):
 		if self.visualize:
 			from visualizers.price_chart.big_trades import BigTradesVisualizer
-			return BigTradesVisualizer(self.model, self.top_pct)
+			return BigTradesVisualizer(self.model, self.top_pct, self.chart_slot)
 		return None
 
 	def reset(self):

@@ -3,7 +3,10 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.open_interest.model import OpenInterest
 
 class OpenInterestVisualizer(PriceChartVisualizer):
-    def __init__(self, open_interest_analyzer: OpenInterest, aggregation_minutes: int):
+    is_oscillator = True
+
+    def __init__(self, open_interest_analyzer: OpenInterest, aggregation_minutes: int, chart_slot: int):
+        super().__init__(chart_slot)
         self.open_interest_analyzer = open_interest_analyzer
 
         self.scatter = go.Scattergl(

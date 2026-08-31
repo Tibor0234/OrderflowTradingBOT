@@ -3,11 +3,15 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_delta.model import VolumeDelta
 
 class CVDVisualizer(PriceChartVisualizer):
+    is_oscillator = True
+
     def __init__(
         self,
         cvd_analyzer: VolumeDelta,
         big_trades_top_pct: float | None = None,
+        chart_slot: int = 0,
     ):
+        super().__init__(chart_slot)
         self.cvd_analyzer = cvd_analyzer
 
         name = "CVD"

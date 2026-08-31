@@ -3,7 +3,7 @@ import plotly.graph_objects as go
 
 class DashboardLayout:
 
-    def build(self):
+    def build(self, price_chart_count=1):
 
         return html.Div(
             style={
@@ -14,12 +14,12 @@ class DashboardLayout:
                 "color": "white"
             },
             children=[
-                self._main_row(),
+                self._main_row(price_chart_count),
                 self._interval()
             ]
         )
 
-    def _main_row(self):
+    def _main_row(self, price_chart_count):
 
         return html.Div(
             style={
@@ -29,7 +29,7 @@ class DashboardLayout:
             },
             children=[
                 self._left_sidebar(),
-                self._price_chart(),
+                self._price_chart(price_chart_count),
                 self._right_panel()
             ]
         )
@@ -64,24 +64,24 @@ class DashboardLayout:
                 ),
 
                 html.Div(
-                    "Last Week Context",
-                    style={"textAlign": "center", "padding": "4px", "fontWeight": "bold"}
-                ),
-
-                dcc.Graph(
-                    id="last-week-chart",
-                    style={"flex": "3"},
-                    figure=go.Figure(),
-                    config={"displayModeBar": False},
-                ),
-
-                html.Div(
                     "Last Day Context",
                     style={"textAlign": "center", "padding": "4px", "fontWeight": "bold"}
                 ),
 
                 dcc.Graph(
                     id="last-day-chart",
+                    style={"flex": "3"},
+                    figure=go.Figure(),
+                    config={"displayModeBar": False},
+                ),
+
+                html.Div(
+                    "Last Week Context",
+                    style={"textAlign": "center", "padding": "4px", "fontWeight": "bold"}
+                ),
+
+                dcc.Graph(
+                    id="last-week-chart",
                     style={"flex": "3"},
                     figure=go.Figure(),
                     config={"displayModeBar": False},
@@ -100,13 +100,29 @@ class DashboardLayout:
             ]
         )
 
-    def _price_chart(self):
+    def _price_chart(self, price_chart_count):
 
-        return dcc.Graph(
-            id="price-chart",
-            style={"flex": "4", "backgroundColor": "#181818"},
-            figure=go.Figure(),
-            config={"displayModeBar": False},
+        return html.Div(
+            style={
+                "flex": "4",
+                "display": "flex",
+                "flexDirection": "column",
+                "backgroundColor": "#181818",
+            },
+            children=[
+                dcc.Graph(
+                    id="price-chart-0",
+                    style={"flex": "1"},
+                    figure=go.Figure(),
+                    config={"displayModeBar": False},
+                ),
+                dcc.Graph(
+                    id="price-chart-1",
+                    style={"flex": "1"} if price_chart_count > 1 else {"display": "none"},
+                    figure=go.Figure(),
+                    config={"displayModeBar": False},
+                ),
+            ],
         )
 
     def _right_panel(self):

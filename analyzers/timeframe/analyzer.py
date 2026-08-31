@@ -1,4 +1,4 @@
-from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 from data_managers.trade.subscriber import TradeManagerSubscriber
 from data_managers.trade.utils import TradeMessage
 from analyzers.timeframe.subscriber import TimeframeSubscriber
@@ -9,8 +9,9 @@ from analyzers.timeframe.candle import Candle
 from global_services.events.bus import EventBus
 from global_services.events.utils import EventBusMsgType
 
-class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
-    def __init__(self, candle_seconds, length=200, visualize=True):
+class TimeframeAnalyzer(PriceChartResource, TradeManagerSubscriber):
+    def __init__(self, candle_seconds, length=200, visualize=True, chart_slot: int | None = None):
+        super().__init__(chart_slot)
         self.model: Timeframe = Timeframe(length)
 
         self.visualize = visualize
@@ -24,11 +25,12 @@ class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
     def visualizer(self):
         if self.visualize:
             from visualizers.price_chart.timeframe import TimeframeVisualizer
-            return TimeframeVisualizer(self.model, self.candle_seconds)
+            return TimeframeVisualizer(self.model, self.candle_seconds, self.chart_slot)
         return None
 
     def subscribe(self, subscriber: TimeframeSubscriber):
         subscriber.init_model(self.model.history.maxlen)
+        subscriber.inherit_chart_slot(self.chart_slot)
         self.subscribers.append(subscriber)
         return self
 

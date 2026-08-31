@@ -3,7 +3,10 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_profile.model import VolumeProfile
 
 class VolumeProfileVisualizer(PriceChartVisualizer):
-    def __init__(self, volume_profile: VolumeProfile):
+    uses_volume_axis = True
+
+    def __init__(self, volume_profile: VolumeProfile, chart_slot: int):
+        super().__init__(chart_slot)
         self.volume_profile = volume_profile
 
         self.bar = go.Bar(

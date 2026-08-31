@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 from analyzers.timeframe.analyzer import TimeframeSubscriber
 from data_managers.trade.utils import TradeMessage
 from trading.market_entities.utils import Side
@@ -9,8 +9,9 @@ from analyzers.volume_profile.utils import PriceBin, POC, ValueArea, Volume
 from analyzers.volume_profile.model import VolumeProfile
 
 
-class VolumeProfileAnalyzer(Resource, TimeframeSubscriber):
-    def __init__(self, price_bin_count=24, value_area_pct=70, length=100, visualize=True):
+class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
+    def __init__(self, price_bin_count=24, value_area_pct=70, length=100, visualize=True, chart_slot: int | None = None):
+        super().__init__(chart_slot)
         self.visualize = visualize
 
         self.model: VolumeProfile = VolumeProfile(
@@ -25,7 +26,7 @@ class VolumeProfileAnalyzer(Resource, TimeframeSubscriber):
     def visualizer(self):
         if self.visualize:
             from visualizers.price_chart.volume_profile import VolumeProfileVisualizer
-            return VolumeProfileVisualizer(self.model)
+            return VolumeProfileVisualizer(self.model, self.chart_slot)
         return None
 
     def reset(self):

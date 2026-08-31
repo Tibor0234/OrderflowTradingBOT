@@ -3,8 +3,8 @@ from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.utils import OscillatorRecord
 
 class CVDAnalyzer(BaseVolumeDeltaAnalyzer):
-    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True):
-        super().__init__(big_trades, visualize)
+    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True, chart_slot: int | None = None):
+        super().__init__(big_trades, visualize, chart_slot)
 
     def get_visualizer(self):
         if self.visualize:
@@ -14,7 +14,7 @@ class CVDAnalyzer(BaseVolumeDeltaAnalyzer):
                 if self.big_trades_analyzer is not None
                 else None
             )
-            return CVDVisualizer(self.model, top_pct)
+            return CVDVisualizer(self.model, top_pct, self.chart_slot)
         return None
 
     def new_current_record(self, next_time=None):

@@ -25,6 +25,7 @@ class LiveDashboard:
         self.panel_content_renderer = PanelContentRenderer()
 
         self.price_visualizers = []
+        self.price_chart_count = 1
         self.context_visualizers = {
             OHLCVPeriod.LAST_DAY: [],
             OHLCVPeriod.LAST_WEEK: []
@@ -41,14 +42,18 @@ class LiveDashboard:
         self.session_pair_statistics_visualizer = None
         self.cumulative_statistics_visualizer = None
 
-        self.app.layout = self.layout.build()
+        self.app.layout = self.layout.build(self.price_chart_count)
         self._register_callbacks()
 
     def _build_dashboard_snapshot(self):
         figures = {
-            "Price chart": self.chart_renderer.build_price_chart(
+            "Price chart 0": self.chart_renderer.build_price_chart(
                 [self.trade_visualizer, self.order_visualizer],
-                self.price_visualizers
+                self._get_price_visualizers(0)
+            ),
+            "Price chart 1": self.chart_renderer.build_price_chart(
+                [self.trade_visualizer, self.order_visualizer],
+                self._get_price_visualizers(1)
             ),
             "Last week chart": self.chart_renderer.build_context_chart(
                 self.context_visualizers[OHLCVPeriod.LAST_WEEK]
@@ -88,7 +93,8 @@ class LiveDashboard:
     def _register_callbacks(self):
 
         @self.app.callback(
-            Output("price-chart", "figure"),
+            Output("price-chart-0", "figure"),
+            Output("price-chart-1", "figure"),
             Output("last-week-chart", "figure"),
             Output("last-day-chart", "figure"),
             Output("session-pair-equity-curve", "figure"),
@@ -105,8 +111,20 @@ class LiveDashboard:
             return (*figures.values(), *panels.values())
 
     def add_price_chart_visualizer(self, visualizer: PriceChartVisualizer):
+        if visualizer.chart_slot not in (0, 1):
+            raise ValueError("Price chart visualizer chart_slot must be 0 or 1")
+
         self.price_visualizers.append(visualizer)
+        self.price_chart_count = max(self.price_chart_count, visualizer.chart_slot + 1)
+        self.app.layout = self.layout.build(self.price_chart_count)
         return self
+
+    def _get_price_visualizers(self, chart_slot: int):
+        return [
+            visualizer
+            for visualizer in self.price_visualizers
+            if visualizer.chart_slot == chart_slot
+        ]
 
     def add_context_chart_visualizer(self, visualizer: ContextChartVisualizer):
         self.context_visualizers[visualizer.period].append(visualizer)

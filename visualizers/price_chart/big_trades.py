@@ -8,7 +8,8 @@ from visualizers.price_chart.base import PriceChartVisualizer
 
 
 class BigTradesVisualizer(PriceChartVisualizer):
-    def __init__(self, big_trades: BigTrades, top_pct: float):
+    def __init__(self, big_trades: BigTrades, top_pct: float, chart_slot: int):
+        super().__init__(chart_slot)
         self.big_trades = big_trades
         self.top_pct = top_pct
 

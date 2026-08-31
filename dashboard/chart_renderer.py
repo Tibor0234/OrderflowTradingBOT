@@ -5,26 +5,44 @@ from visualizers.context_chart.base import ContextChartVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 
 class ChartRenderer:
-    def __init__(self):
-        self.axis_count = 1
-        self.axes_assigned = False
-
     def build_price_chart(self, execution_visualizers: list[MarketEntityVisualizer], price_visualizers: list[PriceChartVisualizer]):
 
         fig = go.Figure()
         shapes = []
+        oscillators = [
+            visualizer
+            for visualizer in price_visualizers
+            if visualizer.is_oscillator
+        ][:3]
+        has_volume_profile = any(
+            visualizer.uses_volume_axis
+            for visualizer in price_visualizers
+        )
 
         for visualizer in execution_visualizers:
             shapes.extend(visualizer.get_shapes())
 
         for visualizer in price_visualizers:
+            if visualizer.is_oscillator and visualizer not in oscillators:
+                continue
+
             traces = visualizer.get_traces()
+            if visualizer.is_oscillator:
+                self._assign_oscillator_axis(traces, oscillators.index(visualizer) + 2)
             fig.add_traces(traces)
             shapes.extend(visualizer.get_shapes())
 
-        fig.update_layout(self._price_layout(shapes))
+        fig.update_layout(
+            self._price_layout(shapes, len(oscillators), has_volume_profile)
+        )
 
         return fig
+
+    @staticmethod
+    def _assign_oscillator_axis(traces, axis_number: int):
+        yaxis = f"y{axis_number}"
+        for trace in traces if isinstance(traces, (list, tuple)) else [traces]:
+            trace.yaxis = yaxis
 
     def build_context_chart(self, visualizers: list[ContextChartVisualizer]):
 
@@ -67,22 +85,27 @@ class ChartRenderer:
             margin=dict(l=0, r=0, t=10, b=0)
         )
 
-    def _price_layout(self, shapes):
-        shapes.append(
-            dict(
-                type="line",
-                xref="paper",
-                x0=0,
-                x1=1,
-                yref="paper",
-                y0=0.2,
-                y1=0.2,
-                line=dict(
-                    color="rgba(255,255,255,0.2)",
-                    width=1
+    def _price_layout(self, shapes, oscillator_count: int, has_volume_profile: bool):
+        oscillator_height = 0.2 * (1.35 ** (oscillator_count - 1)) if oscillator_count else 0
+        panel_height = oscillator_height / oscillator_count if oscillator_count else 0
+
+        for panel_index in range(1, oscillator_count + 1):
+            boundary = panel_index * panel_height
+            shapes.append(
+                dict(
+                    type="line",
+                    xref="paper",
+                    x0=0,
+                    x1=1,
+                    yref="paper",
+                    y0=boundary,
+                    y1=boundary,
+                    line=dict(
+                        color="rgba(255,255,255,0.2)",
+                        width=1
+                    )
                 )
             )
-        )
 
         layout = self._base_layout()
 
@@ -92,25 +115,16 @@ class ChartRenderer:
                 gridcolor="gray",
                 linecolor="white",
                 rangeslider=dict(visible=False),
-                anchor="y2"
+                domain=[0.12, 1] if has_volume_profile else [0, 1],
+                anchor="y"
             ),
             yaxis=dict(
                 showgrid=False,
                 gridcolor="gray",
                 linecolor="white",
-                domain=[0.2, 1]
-            ),
-            yaxis2=dict(
-                showgrid=False,
-                linecolor="white",
-                zeroline=False,
-                domain=[0, 0.2]
-            ),
-            xaxis2=dict(
-                showticklabels=False,
-                showgrid=False,
-                domain=[0, 0.15],
-                anchor="y"
+                domain=[oscillator_height, 1],
+                anchor="x",
+                side="left",
             ),
             legend=dict(
                 orientation="h",
@@ -122,6 +136,30 @@ class ChartRenderer:
             ),
             shapes=shapes
         )
+
+        if has_volume_profile:
+            layout["yaxis"].update(
+                anchor="free",
+                position=0,
+                automargin=True,
+            )
+            layout["xaxis2"] = dict(
+                showgrid=False,
+                showticklabels=False,
+                zeroline=False,
+                domain=[0, 0.12],
+                anchor="y",
+            )
+
+        for panel_index in range(oscillator_count):
+            axis_number = panel_index + 2
+            layout[f"yaxis{axis_number}"] = dict(
+                showgrid=False,
+                linecolor="white",
+                zeroline=False,
+                domain=[panel_index * panel_height, (panel_index + 1) * panel_height],
+                anchor="x",
+            )
 
         return layout
 
@@ -136,13 +174,13 @@ class ChartRenderer:
                 linecolor="white",
                 rangeslider=dict(visible=False),
                 showticklabels=False,
-                domain=[0.2, 1] if has_volume_profile else [0, 1],
+                domain=[0.12, 1] if has_volume_profile else [0, 1],
                 anchor="y",
             ),
             yaxis=dict(
                 showgrid=False,
                 gridcolor="gray",
-                linecolor="white"
+                linecolor="white",
             ),
             legend=dict(
                 orientation="h",
@@ -157,11 +195,17 @@ class ChartRenderer:
         )
 
         if has_volume_profile:
+            layout["yaxis"].update(
+                anchor="free",
+                position=0,
+                side="left",
+                automargin=True,
+            )
             layout["xaxis2"] = dict(
                 showgrid=False,
                 showticklabels=False,
                 zeroline=False,
-                domain=[0, 0.18],
+                domain=[0, 0.12],
                 anchor="y",
             )
 

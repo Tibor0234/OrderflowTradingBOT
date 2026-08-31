@@ -5,7 +5,8 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from global_services.data.provider import DataProvider
 
 class TimeframeVisualizer(PriceChartVisualizer):
-    def __init__(self, timeframe: Timeframe, candle_seconds: int):
+    def __init__(self, timeframe: Timeframe, candle_seconds: int, chart_slot: int):
+        super().__init__(chart_slot)
         self.timeframe = timeframe
         self.candle_seconds = candle_seconds
 

@@ -14,7 +14,7 @@ class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
             y=[],
             orientation="h",
             name=f"VP",
-            marker=dict(color="rgba(0, 0, 255, 0.5)"),
+            marker=dict(color="rgba(0, 0, 255, 1)"),
             showlegend=False,
             xaxis="x2",
         )

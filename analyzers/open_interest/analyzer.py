@@ -1,13 +1,14 @@
 from decimal import Decimal
 
-from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 from data_managers.open_interest.subscriber import OpenInterestManagerSubscriber
 from data_managers.open_interest.utils import OpenInterestMessage
 from analyzers.open_interest.model import OpenInterest
 from analyzers.utils import OscillatorRecord
 
-class OpenInterestAnalyzer(Resource, OpenInterestManagerSubscriber):
-    def __init__(self, aggregation_minutes, length=50, visualize=True):
+class OpenInterestAnalyzer(PriceChartResource, OpenInterestManagerSubscriber):
+    def __init__(self, aggregation_minutes, length=200, visualize=True, chart_slot: int | None = None):
+        super().__init__(chart_slot)
         if aggregation_minutes < 1:
             raise ValueError("aggregation_minutes must be at least 1")
 
@@ -21,7 +22,7 @@ class OpenInterestAnalyzer(Resource, OpenInterestManagerSubscriber):
     def visualizer(self):
         if self.visualize:
             from visualizers.price_chart.open_interest import OpenInterestVisualizer
-            return OpenInterestVisualizer(self.model, self.aggregation_minutes)
+            return OpenInterestVisualizer(self.model, self.aggregation_minutes, self.chart_slot)
         return None
 
     def reset(self):

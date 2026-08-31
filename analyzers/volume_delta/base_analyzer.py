@@ -1,12 +1,13 @@
-from session_pairs.resource import Resource
+from session_pairs.price_chart_resource import PriceChartResource
 from analyzers.timeframe.analyzer import TimeframeSubscriber
 from analyzers.big_trades.analyzer import BigTradesAnalyzer
 from analyzers.volume_delta.model import VolumeDelta
 from data_managers.trade.utils import TradeMessage
 from analyzers.utils import OscillatorRecord
 
-class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
-    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True):
+class BaseVolumeDeltaAnalyzer(PriceChartResource, TimeframeSubscriber):
+    def __init__(self, big_trades: BigTradesAnalyzer | None = None, visualize=True, chart_slot: int | None = None):
+        super().__init__(chart_slot)
         self.name: str
         self.visualize = visualize
         self.big_trades_analyzer = big_trades
