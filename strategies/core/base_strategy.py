@@ -3,6 +3,7 @@ from trading.market_entities.trade import Trade
 from strategies.core.framework import StrategyFramework
 from global_services.events.bus import EventBus
 from global_services.events.utils import EventBusMsgType
+from data_managers.trade.utils import TradeMessage
 
 class BaseStrategy(ABC):
     def init(self, framework: StrategyFramework):
@@ -20,7 +21,10 @@ class BaseStrategy(ABC):
     def on_price_update(self):
         pass
 
-    def on_candle_close(self, candle_sec):
+    def on_candle_close(self, candle_sec: int):
+        pass
+
+    def on_big_trade(self, msg: TradeMessage, top_pct: float):
         pass
 
     def on_trade_close(self, trade: Trade):

@@ -1,6 +1,8 @@
 import inspect
 
-#Resources
+from session_pairs.resource import Resource
+
+# Resources
 from analyzers.timeframe.analyzer import TimeframeAnalyzer
 from analyzers.open_interest.analyzer import OpenInterestAnalyzer
 from analyzers.big_trades.analyzer import BigTradesAnalyzer
@@ -10,61 +12,75 @@ from analyzers.volume_profile.analyzer import VolumeProfileAnalyzer
 from analyzers.ohlcv_timeframe.analyzer import OHLCVTimeframeAnalyzer, OHLCVPeriod
 from analyzers.ohlcv_volume_profile.analyzer import OHLCVVolumeProfileAnalyzer
 
-#Strategies
+# Strategies
 from strategies.executable.test import TestStrategy
 
-def setup_resources(resources: dict):
-    resource_list = list(resources.values())
-    visualizers = []
+class UserConfig:
 
-    for i, current in enumerate(resource_list):
+    def get_essentials(self):
+        strategy = TestStrategy()
+        resources = self._build_resources()
+        visualizers = self._setup_resources(resources)
 
-        for prev in reversed(resource_list[:i]):
-            if hasattr(prev, "subscribe"):
-                sig = inspect.signature(prev.subscribe)
-                params = list(sig.parameters.values())
+        return strategy, resources, visualizers
 
-                expected = params[0].annotation
+    def _build_resources(self) -> dict[str, Resource]:
+        return {
+            "big_trades": BigTradesAnalyzer(
+                length=100,
+                top_pct=2.3,
+                visualize=True,
+            ),
 
-                if expected is not inspect._empty:
-                    if issubclass(type(current), expected):
-                        prev.subscribe(current)
-                        break
+            "tf_1m": TimeframeAnalyzer(
+                candle_seconds=60
+            ),
+            "vd_1m": VolumeDeltaAnalyzer(
+                big_trades=BigTradesAnalyzer(
+                    length=100,
+                    top_pct=1,
+                    visualize=False,
+                ),
+                visualize=True,
+            ),
+            "vp_1m": VolumeProfileAnalyzer(),
 
-        if hasattr(current, "visualizer") and current.visualizer is not None:
-            visualizers.append(current.visualizer)
+            "oi": OpenInterestAnalyzer(
+                aggregation_minutes=1, 
+                visualize=False
+            ),
 
-    return visualizers
+            "ohlcv_1d": OHLCVTimeframeAnalyzer(
+                OHLCVPeriod.LAST_DAY
+            ),
+            "ohlcv_1d_vp": OHLCVVolumeProfileAnalyzer(visualize=False),
 
-# --------------------------
-# ------ USER CONFIG -------
-# --------------------------
+            "ohlcv_1w": OHLCVTimeframeAnalyzer(
+                OHLCVPeriod.LAST_WEEK
+            ),
+            "ohlcv_1w_vp": OHLCVVolumeProfileAnalyzer(),
+        }
 
-def get_essentials():
-    # 🚨 Starting balance (USD)
-    starting_balance = 100_000
+    def _setup_resources(self, resources: dict[str, Resource]) -> list:
+        visualizers = []
+        resource_list = list(resources.values())
 
-    # ⚡ Strategy
-    strategy = TestStrategy()
+        for index, current in enumerate(resource_list):
+            self._subscribe_to_source(current, resource_list[:index])
 
-    big_trades = BigTradesAnalyzer(length=100, top_pct=1, visualize=True)
+            if hasattr(current, "visualizer") and current.visualizer is not None:
+                visualizers.append(current.visualizer)
 
-    # 🛠 Resources
-    resources = {
-        'big_trades': big_trades,
-        'tf_1m': TimeframeAnalyzer(candle_seconds=60),
-        'cvd_1m': CVDAnalyzer(visualize=True),
-        #'vp_1m': VolumeProfileAnalyzer(),
+        return visualizers
 
-        #'oi': OpenInterestAnalyzer(aggregation_minutes=1, visualize=False),
+    def _subscribe_to_source(self, current: Resource, previous_resources: list[Resource]):
+        for previous in reversed(previous_resources):
+            if not hasattr(previous, "subscribe"):
+                continue
 
-        #'ohlcv_1d': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_DAY),
-        #'ohlcv_1d_vp': OHLCVVolumeProfileAnalyzer(),
+            parameters = list(inspect.signature(previous.subscribe).parameters.values())
+            expected_type = parameters[0].annotation
 
-        #'ohlcv_1w': OHLCVTimeframeAnalyzer(OHLCVPeriod.LAST_WEEK),
-        #'ohlcv_1w_vp': OHLCVVolumeProfileAnalyzer(),
-    }
-
-    visualizers = setup_resources(resources)
-
-    return starting_balance, strategy, resources, visualizers
+            if expected_type is not inspect._empty and issubclass(type(current), expected_type):
+                previous.subscribe(current)
+                return

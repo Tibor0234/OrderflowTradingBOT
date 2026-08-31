@@ -3,14 +3,14 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.open_interest.model import OpenInterest
 
 class OpenInterestVisualizer(PriceChartVisualizer):
-    def __init__(self, open_interest_analyzer: OpenInterest):
+    def __init__(self, open_interest_analyzer: OpenInterest, aggregation_minutes: int):
         self.open_interest_analyzer = open_interest_analyzer
 
         self.scatter = go.Scattergl(
             x=[],
             y=[],
             mode="lines",
-            name="OI",
+            name=f"OI ({aggregation_minutes}m)",
             yaxis="y2",
             line=dict(color="rgba(52, 152, 219, 1)", width=1),
         )

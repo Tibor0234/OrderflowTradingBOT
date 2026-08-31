@@ -8,23 +8,24 @@ from visualizers.price_chart.base import PriceChartVisualizer
 
 
 class BigTradesVisualizer(PriceChartVisualizer):
-    def __init__(self, big_trades: BigTrades):
+    def __init__(self, big_trades: BigTrades, top_pct: float):
         self.big_trades = big_trades
+        self.top_pct = top_pct
 
         self.buy_markers = go.Scattergl(
             x=[],
             y=[],
             mode="markers",
-            name="Big buy",
-            marker=dict(color="#4CAF50", opacity=0.8),
-            showlegend=False,
+            name=f"Big Trades ({top_pct:g}%)",
+            marker=dict(color="#4CAF50", opacity=0.6),
+            showlegend=True,
         )
         self.sell_markers = go.Scattergl(
             x=[],
             y=[],
             mode="markers",
-            name="Big sell",
-            marker=dict(color="#FF5722", opacity=0.8),
+            name=f"Big Trades ({top_pct:g}%)",
+            marker=dict(color="#FF5722", opacity=0.6),
             showlegend=False,
         )
 

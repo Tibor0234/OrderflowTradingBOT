@@ -8,6 +8,8 @@ from data_managers.trade.subscriber import TradeManagerSubscriber
 from data_managers.trade.utils import TradeMessage
 from analyzers.big_trades.model import BigTrades
 from analyzers.big_trades.utils import BigTradeRecord
+from global_services.events.bus import EventBus
+from global_services.events.utils import EventBusMsgType
 
 
 class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
@@ -21,6 +23,7 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 
 		self.model: BigTrades = BigTrades(length)
 		self.sample_size = sample_size
+		self.top_pct = top_pct
 		self.top_rate = Decimal(str(top_pct)) / Decimal(100)
 		self._quantities: deque[Decimal] = deque(maxlen=sample_size)
 		self._sorted_quantities: list[Decimal] = []
@@ -31,7 +34,7 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 	def visualizer(self):
 		if self.visualize:
 			from visualizers.price_chart.big_trades import BigTradesVisualizer
-			return BigTradesVisualizer(self.model)
+			return BigTradesVisualizer(self.model, self.top_pct)
 		return None
 
 	def reset(self):
@@ -40,7 +43,8 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 		self._sorted_quantities.clear()
 
 	def process_message(self, msg: TradeMessage):
-		if self.is_big_trade(msg.quantity):
+		is_big_trade = self.is_big_trade(msg.quantity)
+		if is_big_trade:
 			self.model.content.append(BigTradeRecord(
 				time=msg.time,
 				price=msg.price,
@@ -48,7 +52,11 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 				side=msg.side,
 			))
 
+			EventBus().emit(EventBusMsgType.BIG_TRADE, msg, self.top_rate)
+
 		self._add_quantity(msg.quantity)
+
+		return is_big_trade
 
 	def _add_quantity(self, quantity: Decimal):
 		if len(self._quantities) == self.sample_size:
@@ -65,6 +73,6 @@ class BigTradesAnalyzer(Resource, TradeManagerSubscriber):
 			return False
 
 		rank = ceil((1 - self.top_rate) * len(self._sorted_quantities))
-		threshold = self._sorted_quantities[max(0, rank - 1)]
+		threshold = self._sorted_quantities[max(0, rank - 1)]			
 
 		return quantity >= threshold

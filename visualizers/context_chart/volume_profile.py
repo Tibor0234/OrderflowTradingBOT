@@ -1,9 +1,10 @@
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
 from visualizers.context_chart.base import ContextChartVisualizer
 from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 
 class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
+    uses_volume_axis = True
+
     def __init__(self, volume_profile: OHLCVVolumeProfile):
         self.volume_profile = volume_profile
         self.period = self.volume_profile.period
@@ -14,21 +15,28 @@ class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
             orientation="h",
             name=f"VP",
             marker=dict(color="rgba(0, 0, 255, 0.5)"),
-            showlegend=False
+            showlegend=False,
+            xaxis="x2",
         )
 
     def get_traces(self):
         bins = self.volume_profile.content
 
-        start_dt = datetime.fromtimestamp(self.volume_profile.start_time / 1000)
+        if not bins:
+            self.bar.x = []
+            self.bar.y = []
+            return self.bar
 
-        self.bar.x = [start_dt + timedelta(seconds=float(b.volume)) for b in bins]
+        self.bar.x = [b.volume for b in bins]
         self.bar.y = [b.low + b.size / 2 for b in bins]
 
         return self.bar
 
     def get_shapes(self):
         shapes = []
+
+        if self.volume_profile.poc is None:
+            return shapes
 
         poc_price = self.volume_profile.poc.price
         if poc_price is not None:
@@ -46,7 +54,7 @@ class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
             )
 
         value_area = self.volume_profile.value_area
-        if value_area.high is not None and value_area.low is not None:
+        if value_area is not None and value_area.high is not None and value_area.low is not None:
             shapes.append(
                 dict(
                     type="rect",

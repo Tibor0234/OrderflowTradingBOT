@@ -38,9 +38,15 @@ class MarketFeed:
         orderbook_manager: OrderBookManager,
         trade_manager: TradeManager,
         news_manager: NewsManager,
-        ohlcv_manager: OHLCVManager
+        ohlcv_manager: OHLCVManager,
+        session_numbers: list[int | str] | None = None,
+        symbols: list[str] | None = None,
     ):
-        self.session_pair_manager = SessionPairManager(conn)
+        self.session_pair_manager = SessionPairManager(
+            conn,
+            session_numbers=session_numbers,
+            symbols=symbols,
+        )
         
         self.database_generator_factory = DatabaseGeneratorFactory(conn)
         self.source_coordinator = SourceCoordinator(

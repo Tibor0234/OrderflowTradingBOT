@@ -7,7 +7,9 @@ class PanelContentRenderer:
     def render_session_pair_panel(self, session_counter: SessionCounter):
         return (
             f"Session: {session_counter.session} / {session_counter.total_sessions} | "
-            f"Pair: {session_counter.pair} / {session_counter.total_pairs}"
+            f"{session_counter.symbol}  "
+            f"Progress: {session_counter.session_pair} / "
+            f"{session_counter.selected_session_pairs}"
         )
 
     def render_news_panel(self, news_data=None):

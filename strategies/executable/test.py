@@ -1,12 +1,11 @@
-from decimal import Decimal
-from strategies.core.base_strategy import BaseStrategy
+from strategies.core.essentials_package import *
 
 class TestStrategy(BaseStrategy):
     def on_candle_close(self, candle_sec):
         if self.fw.is_trade_open() or self.fw.is_order_pending():
             return
         
-        cvd_1m = self.fw.get_volume_delta("cvd_1m")
+        cvd_1m = self.fw.get_resource("vd_1m", VolumeDelta)
 
         if cvd_1m.current is not None:
 

@@ -27,6 +27,9 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
         self.model.current = None
         self.new_starting_value = None
 
+        if self.big_trades_analyzer is not None:
+            self.big_trades_analyzer.reset()
+
     def on_timeframe_update(self, msg: TradeMessage):
         if self.model.current is None:
             self.model.current = OscillatorRecord(
@@ -35,7 +38,8 @@ class BaseVolumeDeltaAnalyzer(Resource, TimeframeSubscriber):
             )
 
         if self.big_trades_analyzer is not None:
-            if not self.big_trades_analyzer.is_big_trade(msg.quantity):
+            is_big_trade = self.big_trades_analyzer.process_message(msg)
+            if not is_big_trade:
                 return
 
         delta = msg.quantity * msg.side.value

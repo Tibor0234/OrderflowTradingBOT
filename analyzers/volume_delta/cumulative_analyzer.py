@@ -9,7 +9,12 @@ class CVDAnalyzer(BaseVolumeDeltaAnalyzer):
     def get_visualizer(self):
         if self.visualize:
             from visualizers.price_chart.cvd import CVDVisualizer
-            return CVDVisualizer(self.model)
+            top_pct = (
+                self.big_trades_analyzer.top_pct
+                if self.big_trades_analyzer is not None
+                else None
+            )
+            return CVDVisualizer(self.model, top_pct)
         return None
 
     def new_current_record(self, next_time=None):

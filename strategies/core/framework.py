@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import TypeVar
 from session_pairs.context import SessionPairContext
 from trading.market_entities.trade import Trade
 from trading.execution.position_manager import PositionManager
@@ -18,6 +19,10 @@ from analyzers.timeframe.model import Timeframe
 from analyzers.volume_delta.model import VolumeDelta
 from analyzers.volume_profile.model import VolumeProfile
 from analyzers.big_trades.model import BigTrades
+
+
+ModelT = TypeVar("ModelT")
+
 
 class StrategyFramework(SequenceAnalyzers):
     def __init__(self, position_manager: PositionManager, session_pair_context: SessionPairContext, execution_order_book: ExecutionOrderBook):
@@ -194,29 +199,6 @@ class StrategyFramework(SequenceAnalyzers):
 
     # resource queries
 
-    def get_ohlcv_timeframe(self, name: str) -> OHLCVTimeframe:
-        return self.session_pair_context.get_resource(name)
-
-    def get_ohlcv_volume_profile(self, name: str) -> OHLCVVolumeProfile:
-        return self.session_pair_context.get_resource(name)
-
-    def get_microprice_deviation(self, name: str) -> MicropriceDeviation:
-        return self.session_pair_context.get_resource(name)
-
-    def get_open_interest(self, name: str) -> OpenInterest:
-        return self.session_pair_context.get_resource(name)
-
-    def get_order_book_imbalance(self, name: str) -> OrderBookImbalance:
-        return self.session_pair_context.get_resource(name)
-
-    def get_timeframe(self, name: str) -> Timeframe:
-        return self.session_pair_context.get_resource(name)
-
-    def get_volume_delta(self, name: str) -> VolumeDelta:
-        return self.session_pair_context.get_resource(name)
-
-    def get_volume_profile(self, name: str) -> VolumeProfile:
-        return self.session_pair_context.get_resource(name)
-
-    def get_big_trades(self, name: str) -> BigTrades:
-        return self.session_pair_context.get_resource(name)
+    def get_resource(self, name: str, model_type: type[ModelT]) -> ModelT | None:
+        resource = self.session_pair_context.get_resource(name)
+        return resource if isinstance(resource, model_type) else None

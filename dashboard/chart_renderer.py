@@ -30,12 +30,16 @@ class ChartRenderer:
 
         fig = go.Figure()
         shapes = []
+        has_volume_profile = any(
+            getattr(visualizer, "uses_volume_axis", False)
+            for visualizer in visualizers
+        )
 
         for visualizer in visualizers:
             fig.add_traces(visualizer.get_traces())
             shapes.extend(visualizer.get_shapes())
 
-        fig.update_layout(self._context_layout(shapes))
+        fig.update_layout(self._context_layout(shapes, has_volume_profile))
 
         return fig
 
@@ -121,7 +125,7 @@ class ChartRenderer:
 
         return layout
 
-    def _context_layout(self, shapes):
+    def _context_layout(self, shapes, has_volume_profile=False):
 
         layout = self._base_layout()
 
@@ -131,7 +135,9 @@ class ChartRenderer:
                 gridcolor="gray",
                 linecolor="white",
                 rangeslider=dict(visible=False),
-                showticklabels=False
+                showticklabels=False,
+                domain=[0.2, 1] if has_volume_profile else [0, 1],
+                anchor="y",
             ),
             yaxis=dict(
                 showgrid=False,
@@ -149,6 +155,15 @@ class ChartRenderer:
             ),
             shapes=shapes
         )
+
+        if has_volume_profile:
+            layout["xaxis2"] = dict(
+                showgrid=False,
+                showticklabels=False,
+                zeroline=False,
+                domain=[0, 0.18],
+                anchor="y",
+            )
 
         return layout
 

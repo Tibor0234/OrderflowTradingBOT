@@ -5,6 +5,7 @@ import os
 
 import dotenv
 import psycopg
+import yaml
 
 # ---- Market data & managers ----
 from market_feed.feed import MarketFeed
@@ -42,12 +43,16 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from visualizers.context_chart.base import ContextChartVisualizer
 
 # ---- User config ----
-from user_config import get_essentials
+from user_config import UserConfig
 
 # ------------------- MAIN -------------------
 if __name__ == "__main__":
+    with open("config.yaml", encoding="utf-8") as config_file:
+        config = yaml.safe_load(config_file)
+
     # ---- Essentials ----
-    starting_balance, strategy, resources, visualizers = get_essentials()
+    user_config = UserConfig()
+    strategy, resources, visualizers = user_config.get_essentials()
 
     dotenv.load_dotenv()
 
@@ -67,8 +72,10 @@ if __name__ == "__main__":
     cumulative_statistics = CumulativeStatistics()
     session_pair_statistics = SessionPairBasedStatistics()
     position_manager = PositionManager(
-        starting_balance=Decimal(starting_balance),
-        order_book=execution_order_book
+        starting_balance=Decimal(str(config["starting_balance"])),
+        order_book=execution_order_book,
+        maker_fee_pct=Decimal(str(config["maker_fee_rate"])),
+        taker_fee_pct=Decimal(str(config["taker_fee_rate"])),
     ) \
         .add_equity_curve(cumulative_equity_curve) \
         .add_equity_curve(session_pair_based_equity_curve) \
@@ -99,7 +106,9 @@ if __name__ == "__main__":
         orderbook_manager,
         trade_manager,
         news_manager,
-        ohlcv_manager
+        ohlcv_manager,
+        session_numbers=config.get("sessions_numbers", []),
+        symbols=config.get("symbols", []),
     )
 
     # ---- Setup resources ----

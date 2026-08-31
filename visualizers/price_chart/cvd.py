@@ -3,14 +3,22 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_delta.model import VolumeDelta
 
 class CVDVisualizer(PriceChartVisualizer):
-    def __init__(self, cvd_analyzer: VolumeDelta):
+    def __init__(
+        self,
+        cvd_analyzer: VolumeDelta,
+        big_trades_top_pct: float | None = None,
+    ):
         self.cvd_analyzer = cvd_analyzer
+
+        name = "CVD"
+        if big_trades_top_pct is not None:
+            name += f" (Big Trades {big_trades_top_pct:g}%)"
 
         self.scatter = go.Scattergl(
             x=[],
             y=[],
             mode="lines",
-            name="CVD",
+            name=name,
             yaxis="y2",
             line=dict(color="gray", width=1),
         )

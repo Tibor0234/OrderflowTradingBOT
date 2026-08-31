@@ -5,8 +5,9 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from global_services.data.provider import DataProvider
 
 class TimeframeVisualizer(PriceChartVisualizer):
-    def __init__(self, timeframe: Timeframe):
+    def __init__(self, timeframe: Timeframe, candle_seconds: int):
         self.timeframe = timeframe
+        self.candle_seconds = candle_seconds
 
         self.candlestick = go.Candlestick(
             x=[],
@@ -14,7 +15,7 @@ class TimeframeVisualizer(PriceChartVisualizer):
             high=[],
             low=[],
             close=[],
-            name=""
+            name="",
         )
 
     def get_traces(self):
@@ -25,7 +26,7 @@ class TimeframeVisualizer(PriceChartVisualizer):
         self.candlestick.high = [c.high for c in combined]
         self.candlestick.low = [c.low for c in combined]
         self.candlestick.close = [c.close for c in combined]
-        self.candlestick.name=f'{DataProvider().get_symbol()} ({self.timeframe.candle_seconds}s)'
+        self.candlestick.name=f'{DataProvider().get_symbol()} ({self.candle_seconds}s)'
 
         return self.candlestick
     

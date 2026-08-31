@@ -21,7 +21,7 @@ class OpenInterestAnalyzer(Resource, OpenInterestManagerSubscriber):
     def visualizer(self):
         if self.visualize:
             from visualizers.price_chart.open_interest import OpenInterestVisualizer
-            return OpenInterestVisualizer(self.model)
+            return OpenInterestVisualizer(self.model, self.aggregation_minutes)
         return None
 
     def reset(self):

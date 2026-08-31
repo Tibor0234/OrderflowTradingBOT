@@ -11,10 +11,11 @@ from global_services.events.utils import EventBusMsgType
 
 class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
     def __init__(self, candle_seconds, length=200, visualize=True):
-        self.model: Timeframe = Timeframe(length, candle_seconds)
+        self.model: Timeframe = Timeframe(length)
 
         self.visualize = visualize
 
+        self.candle_seconds = candle_seconds
         self.candle_ms = candle_seconds * 1000
 
         self.subscribers: list[TimeframeSubscriber] = []
@@ -23,7 +24,7 @@ class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
     def visualizer(self):
         if self.visualize:
             from visualizers.price_chart.timeframe import TimeframeVisualizer
-            return TimeframeVisualizer(self.model)
+            return TimeframeVisualizer(self.model, self.candle_seconds)
         return None
 
     def subscribe(self, subscriber: TimeframeSubscriber):
@@ -61,5 +62,5 @@ class TimeframeAnalyzer(Resource, TradeManagerSubscriber):
 
             EventBus().emit(
                 EventBusMsgType.CANDLE_CLOSE,
-                self.model.candle_seconds
+                self.candle_seconds
             )

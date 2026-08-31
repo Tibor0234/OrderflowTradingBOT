@@ -30,7 +30,7 @@ class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
         self.poc_index = None
         self.model.start_time = None
 
-    def on_context_timeframe_update(self, msg: OHLCVMessage):
+    def on_ohlcv_timeframe_update(self, msg: OHLCVMessage):
         self.model.start_time = min(c.time for c in msg.candles)
 
         volumes = [c.volume for c in msg.candles]

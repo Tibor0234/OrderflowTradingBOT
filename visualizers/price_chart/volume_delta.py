@@ -3,13 +3,21 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_delta.model import VolumeDelta
 
 class VolumeDeltaVisualizer(PriceChartVisualizer):
-    def __init__(self, volume_delta_analyzer: VolumeDelta):
+    def __init__(
+        self,
+        volume_delta_analyzer: VolumeDelta,
+        big_trades_top_pct: float | None = None,
+    ):
         self.volume_delta_analyzer = volume_delta_analyzer
+
+        name = "VD"
+        if big_trades_top_pct is not None:
+            name += f" (Big Trades {big_trades_top_pct:g}%)"
 
         self.bar = go.Bar(
             x=[],
             y=[],
-            name="VD",
+            name=name,
             yaxis="y2",
         )
 
