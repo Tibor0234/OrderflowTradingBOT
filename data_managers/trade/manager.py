@@ -24,7 +24,7 @@ class TradeManager(DataManager):
         )
 
         DataProvider().set(msg['s'].upper(), conv_msg.price, conv_msg.time)
-        EventBus().emit(EventBusMsgType.PRICE_UPDATE)
-
         for sub in self.subscribers:
             sub.process_message(conv_msg)
+
+        EventBus().emit(EventBusMsgType.PRICE_UPDATE)

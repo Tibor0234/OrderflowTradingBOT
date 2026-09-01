@@ -3,6 +3,7 @@ from decimal import Decimal
 from trading.execution.order_execution import OrderExecutionManager
 from trading.execution.trade_execution import TradeExecutionManager
 from trading.execution.order_book import ExecutionOrderBook
+from trading.execution.order_flow import ExecutionOrderFlow
 from trading.market_entities.order import Order
 from trading.market_entities.stop_order import StopOrder
 from trading.market_entities.increase_order import IncreaseOrder
@@ -14,9 +15,10 @@ from global_services.events.utils import EventBusMsgType
 
 
 class PositionManager:
-    def __init__(self, starting_balance, order_book: ExecutionOrderBook, maker_fee_pct=0.02, taker_fee_pct=0.06):
+    def __init__(self, starting_balance, order_book: ExecutionOrderBook, order_flow: ExecutionOrderFlow, maker_fee_pct=0.02, taker_fee_pct=0.06):
         self.starting_balance = Decimal(starting_balance)
         self.order_book = order_book
+        self.order_flow = order_flow
 
         self.maker_fee_rate = Decimal(maker_fee_pct / 100)
         self.taker_fee_rate = Decimal(taker_fee_pct / 100)

@@ -27,6 +27,10 @@ class OrderExecutionManager:
         return self.position_manager.order_book
 
     @property
+    def order_flow(self):
+        return self.position_manager.order_flow
+
+    @property
     def maker_fee_rate(self):
         return self.position_manager.maker_fee_rate
 
@@ -70,17 +74,15 @@ class OrderExecutionManager:
         is_limit = order.type == OrderType.LIMIT
 
         if is_limit:
-            execution_price, filled_value = self.order_book.calculate_limit_fill(
-                order.value, order.side, order.entry_price
+            execution_price, filled_value = self.order_flow.calculate_limit_fill(
+                order.value, order.leverage, order.side, order.entry_price
             )
-
             if filled_value == Decimal(0):
                 return
-
             fee_rate = self.maker_fee_rate
         else:
             execution_price = self.order_book.calculate_market_fill(
-                order.value, order.side
+                order.value, order.leverage, order.side
             )
             filled_value = order.value
             fee_rate = self.taker_fee_rate

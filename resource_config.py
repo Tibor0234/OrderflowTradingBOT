@@ -38,10 +38,15 @@ class ResourceConfig:
             ),
             "vd_1m": VolumeDeltaAnalyzer(),
 
+            "tf_5m": TimeframeAnalyzer(
+                candle_seconds=300
+            ),
+            "vd_5m": VolumeDeltaAnalyzer(),
+
             "ohlcv_1d": OHLCVTimeframeAnalyzer(
                 OHLCVPeriod.LAST_DAY
             ),
-            "ohlcv_1d_vp": OHLCVVolumeProfileAnalyzer(visualize=False),
+            "ohlcv_1d_vp": OHLCVVolumeProfileAnalyzer(),
 
             "ohlcv_1w": OHLCVTimeframeAnalyzer(
                 OHLCVPeriod.LAST_WEEK

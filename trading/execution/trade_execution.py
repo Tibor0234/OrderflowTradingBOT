@@ -29,6 +29,10 @@ class TradeExecutionManager:
         return self.position_manager.order_book
 
     @property
+    def order_flow(self):
+        return self.position_manager.order_flow
+
+    @property
     def maker_fee_rate(self):
         return self.position_manager.maker_fee_rate
 
@@ -74,21 +78,21 @@ class TradeExecutionManager:
         order_value = trade.value * stop_order.close_rate
 
         if is_limit:
-            execution_price, filled_value = self.order_book.calculate_limit_fill(
+            execution_price, filled_value = self.order_flow.calculate_limit_fill(
                 value=order_value,
+                leverage=trade.leverage,
                 side=stop_order.side,
                 entry_price=stop_order.price,
             )
-
             if filled_value == Decimal(0):
                 return
-
             filled_close_rate = (filled_value / order_value) * stop_order.close_rate
             fee_value = filled_value
             fee_rate = self.maker_fee_rate
         else:
             execution_price = self.order_book.calculate_market_fill(
                 value=order_value,
+                leverage=trade.leverage,
                 side=stop_order.side,
             )
             filled_close_rate = stop_order.close_rate

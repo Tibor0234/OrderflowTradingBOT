@@ -63,6 +63,7 @@ if __name__ == "__main__":
 
     # ---- Equity & position management ----
     execution_order_book = ExecutionOrderBook()
+    execution_order_flow = ExecutionOrderFlow()
     cumulative_equity_curve = CumulativeEquityCurve(
         refresh_rate=2_000,
         max_points=5_000
@@ -76,6 +77,7 @@ if __name__ == "__main__":
     position_manager = PositionManager(
         starting_balance=Decimal(str(config["starting_balance"])),
         order_book=execution_order_book,
+        order_flow=execution_order_flow,
         maker_fee_pct=Decimal(str(config["maker_fee_rate"])),
         taker_fee_pct=Decimal(str(config["taker_fee_rate"])),
     ) \
@@ -94,7 +96,7 @@ if __name__ == "__main__":
     # ---- Managers ----
     open_interest_manager = OpenInterestManager()
     orderbook_manager = OrderBookManager().subscribe(execution_order_book)
-    trade_manager = TradeManager()
+    trade_manager = TradeManager().subscribe(execution_order_flow)
     news_manager = NewsManager()
     ohlcv_manager = OHLCVManager()
 
