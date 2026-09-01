@@ -4,7 +4,10 @@ from analyzers.ohlcv_timeframe.model import OHLCVTimeframe
 from visualizers.context_chart.base import ContextChartVisualizer
 
 class OHLCVTimeframeVisualizer(ContextChartVisualizer):
+    """Visualizes OHLCV candles for a specific timeframe."""
+
     def __init__(self, timeframe: OHLCVTimeframe):
+        """Initialize the visualizer with the specified timeframe."""
         self.timeframe = timeframe
         self.period = timeframe.period
 
@@ -18,6 +21,7 @@ class OHLCVTimeframeVisualizer(ContextChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the current OHLCV candlestick trace."""
         candles = self.timeframe.content
 
         if not candles: return []

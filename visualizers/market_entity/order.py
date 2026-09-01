@@ -7,11 +7,15 @@ from trading.market_entities.utils import OrderType
 from visualizers.utils import format_number
 
 class OrderVisualizer(MarketEntityVisualizer):
+    """Visualizes active limit and increase orders on the price chart and dashboard."""
+
     def __init__(self, orders: list[Order], increase_orders: list[IncreaseOrder]):
+        """Initialize the visualizer with active orders."""
         self.orders = orders
         self.increase_orders = increase_orders
 
     def get_shapes(self):
+        """Return horizontal price levels for active limit orders."""
         shapes = []
 
         for order in self.orders + self.increase_orders:
@@ -40,6 +44,7 @@ class OrderVisualizer(MarketEntityVisualizer):
         return shapes
         
     def get_panel_content(self):
+        """Return order details formatted for the dashboard panel."""
         categories = [
             "Side",
             "Value (USD)",

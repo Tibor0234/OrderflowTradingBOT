@@ -8,17 +8,22 @@ from reportlab.pdfgen import canvas
 
 
 class BaseReportGenerator:
+    """Provides shared functionality for generating trading reports."""
+
     def __init__(self, report_directory: Path):
+        """Initialize the report generator with its output directory."""
         self.report_directory = report_directory
 
     @staticmethod
     def create_report_directory(strategy_name: str) -> Path:
+        """Create and return a timestamped directory for a strategy report."""
         started_at = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H-%M-%S")
         report_directory = Path("reports") / f"{started_at}-{strategy_name}"
         report_directory.mkdir(parents=True, exist_ok=True)
         return report_directory
 
     def _format_time_range(self, start_timestamp):
+        """Format the report time range from the start timestamp to the current time."""
         if start_timestamp is None:
             return "Session time unavailable"
 
@@ -27,6 +32,7 @@ class BaseReportGenerator:
         return f"{start_time:%Y-%m-%d %H:%M:%S} - {end_time:%Y-%m-%d %H:%M:%S}"
 
     def _render_pdf(self, report_path, title, time_range, equity_visualizer, statistics_visualizer):
+        """Render the report content and save it as a PDF."""
         page_width, page_height = A4
         pdf = canvas.Canvas(str(report_path), pagesize=A4)
 
@@ -45,6 +51,7 @@ class BaseReportGenerator:
         pdf.save()
 
     def _draw_statistics(self, pdf, x, top, width, statistics_visualizer):
+        """Draw the statistics panel onto the PDF."""
         categories, values = statistics_visualizer.get_panel_content()
         pdf.setFont("Helvetica-Bold", 13)
         pdf.drawString(x, top, "Statistics")
@@ -63,6 +70,7 @@ class BaseReportGenerator:
             pdf.drawRightString(x + width - 12, y, self._value_text(value))
 
     def _draw_equity_curve(self, pdf, x, y, width, height, equity_visualizer):
+        """Draw the equity curve and its reference lines onto the PDF."""
         left_margin = 54
         bottom_margin = 28
         plot_x = x + left_margin
@@ -161,9 +169,11 @@ class BaseReportGenerator:
 
     @staticmethod
     def _value_text(value):
+        """Extract the display text from a report value."""
         return str(getattr(value, "children", value))
 
     @staticmethod
     def _value_color(value):
+        """Return the display color defined by the value style."""
         style = getattr(value, "style", {})
         return colors.HexColor(style.get("color", "#ffffff"))

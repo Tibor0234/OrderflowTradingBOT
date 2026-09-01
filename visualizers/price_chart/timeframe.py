@@ -5,7 +5,10 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from global_services.data.provider import DataProvider
 
 class TimeframeVisualizer(PriceChartVisualizer):
+    """Visualizes timeframe candles and the current market price."""
+
     def __init__(self, timeframe: Timeframe, candle_seconds: int, chart_slot: int):
+        """Initialize the visualizer with the timeframe and chart slot."""
         super().__init__(chart_slot)
         self.timeframe = timeframe
         self.candle_seconds = candle_seconds
@@ -20,6 +23,7 @@ class TimeframeVisualizer(PriceChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the timeframe candlestick trace."""
         combined = list(self.timeframe.content)
 
         self.candlestick.x = [datetime.fromtimestamp(c.time / 1000) for c in combined]
@@ -32,6 +36,7 @@ class TimeframeVisualizer(PriceChartVisualizer):
         return self.candlestick
     
     def get_shapes(self):
+        """Return a horizontal line marking the current market price."""
         current_price = DataProvider().get_price()
         if current_price is None:
             return []

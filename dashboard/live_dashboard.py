@@ -16,8 +16,10 @@ from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 from market_feed.utils import SessionCounter
 
 class LiveDashboard:
-    def __init__(self, title):
+    """Manages the live Dash application and its dashboard visualizers."""
 
+    def __init__(self, title):
+        """Initialize the dashboard, its components, and callbacks."""
         self.app = dash.Dash(__name__)
         self.app.title = title
 
@@ -48,6 +50,7 @@ class LiveDashboard:
         self._register_callbacks()
 
     def _build_dashboard_snapshot(self):
+        """Build the current chart figures and panel contents."""
         figures = {
             "Price chart 0": self.chart_renderer.build_price_chart(
                 [self.trade_visualizer, self.order_visualizer, self.stop_order_visualizer],
@@ -96,7 +99,7 @@ class LiveDashboard:
 
 
     def _register_callbacks(self):
-
+        """Register Dash callbacks for periodic dashboard updates."""
         @self.app.callback(
             Output("price-chart-0", "figure"),
             Output("price-chart-1", "figure"),
@@ -117,6 +120,7 @@ class LiveDashboard:
             return (*figures.values(), *panels.values())
 
     def add_price_chart_visualizer(self, visualizer: PriceChartVisualizer):
+        """Add a price chart visualizer to the specified chart slot."""
         if visualizer.chart_slot not in (0, 1):
             raise ValueError("Price chart visualizer chart_slot must be 0 or 1")
 
@@ -126,6 +130,7 @@ class LiveDashboard:
         return self
 
     def _get_price_visualizers(self, chart_slot: int):
+        """Return price visualizers assigned to the specified chart slot."""
         return [
             visualizer
             for visualizer in self.price_visualizers
@@ -133,29 +138,35 @@ class LiveDashboard:
         ]
 
     def add_context_chart_visualizer(self, visualizer: ContextChartVisualizer):
+        """Add a context chart visualizer for its configured timeframe."""
         self.context_visualizers[visualizer.period].append(visualizer)
         return self
     
     def set_session_counter(self, session_counter: SessionCounter):
+        """Set the session counter used by the dashboard."""
         self.session_counter = session_counter
         return self
 
     def set_execution_visualizers(self, trade_visualizer: TradeVisualizer, order_visualizer: OrderVisualizer, stop_order_visualizer: StopOrderVisualizer):
+        """Set the visualizers used for trades, orders, and stop orders."""
         self.trade_visualizer = trade_visualizer
         self.order_visualizer = order_visualizer
         self.stop_order_visualizer = stop_order_visualizer
         return self
 
     def set_equity_curve_visualizers(self, session_pair_visualizer: EquityCurveVisualizer, cumulative_visualizer: EquityCurveVisualizer):
+        """Set the visualizers used for session and cumulative equity curves."""
         self.session_pair_equity_visualizer = session_pair_visualizer
         self.cumulative_equity_visualizer = cumulative_visualizer
         return self
     
     def set_statistics_visualizers(self, session_pair_visualizer: StatisticsVisualizer, cumulative_visualizer: StatisticsVisualizer):
+        """Set the visualizers used for session and cumulative statistics."""
         self.session_pair_statistics_visualizer = session_pair_visualizer
         self.cumulative_statistics_visualizer = cumulative_visualizer
         return self
 
     def run(self, debug=False):
+        """Start the Dash application with the configured dashboard."""
         logging.getLogger("werkzeug").setLevel(logging.ERROR)
         self.app.run(debug=debug, use_reloader=False)

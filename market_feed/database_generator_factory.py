@@ -2,15 +2,14 @@ from psycopg import Connection
 
 
 class DatabaseGeneratorFactory:
-    """
-    Factory a különböző adatforrásokból történő generátorok létrehozásához.
-    """
+    """Creates generators for streaming market data from the database."""
 
     def __init__(self, conn: Connection):
+        """Initialize the factory with a database connection."""
         self.conn = conn
 
     def instrument_metadata(self, session_pair_id):
-        """Betölti egy session pair instrumentumának metadata adatait."""
+        """Return instrument metadata for the specified session pair."""
         with self.conn.cursor() as cursor:
             cursor.execute("""
                 SELECT
@@ -33,13 +32,7 @@ class DatabaseGeneratorFactory:
             return cursor.fetchone()
 
     def trade_generator(self, session_pair_id):
-        """
-        Egyetlen session_pair trade adatait streameli.
-
-        FONTOS:
-        Itt már közvetlenül session_pair_id alapján szűrünk,
-        tehát nem kerülhetnek bele ugyanazon session más pairei.
-        """
+        """Stream trade data for the specified session pair."""
         cursor = self.conn.cursor(
             name=f"trade_cursor_{session_pair_id}"
         )
@@ -57,7 +50,7 @@ class DatabaseGeneratorFactory:
             cursor.close()
 
     def orderbook_generator(self, session_pair_id):
-        """Egyetlen session_pair orderbook adatait streameli."""
+        """Stream order book data for the specified session pair."""
         cursor = self.conn.cursor(
             name=f"ob_cursor_{session_pair_id}"
         )
@@ -75,7 +68,7 @@ class DatabaseGeneratorFactory:
             cursor.close()
 
     def oi_generator(self, session_pair_id):
-        """Open interest adatait streameli."""
+        """Stream open interest data for the specified session pair."""
         cursor = self.conn.cursor(
             name=f"oi_cursor_{session_pair_id}"
         )
@@ -92,16 +85,10 @@ class DatabaseGeneratorFactory:
         finally:
             cursor.close()
 
-    def context_generator(self, session_pair_id):
-        """
-        Egy session_pair context candle-jeit fetch csomagok szerint
-        streameli. A csomagok sorrendjét a fetch timestampje határozza meg.
-
-        Egy yield egy teljes context csomag, amelyet a ContextManager
-        közvetlenül fel tud dolgozni.
-        """
+    def ohlcv_generator(self, session_pair_id):
+        """Stream OHLCV candle data grouped into fetch packages."""
         cursor = self.conn.cursor(
-            name=f"context_cursor_{session_pair_id}"
+            name=f"ohlcv_cursor_{session_pair_id}"
         )
         try:
             cursor.execute("""
@@ -165,5 +152,5 @@ class DatabaseGeneratorFactory:
             cursor.close()
 
     def news_generator(self, session_pair_id):
-        """News adatait streameli (jelenleg üres)."""
+        """Return a generator for news data of the specified session pair."""
         return iter([])

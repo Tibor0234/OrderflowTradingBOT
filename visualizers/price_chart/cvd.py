@@ -3,6 +3,8 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_delta.model import VolumeDelta
 
 class CVDVisualizer(PriceChartVisualizer):
+    """Visualizes cumulative volume delta as an oscillator."""
+
     is_oscillator = True
 
     def __init__(
@@ -11,6 +13,7 @@ class CVDVisualizer(PriceChartVisualizer):
         big_trades_top_pct: float | None = None,
         chart_slot: int = 0,
     ):
+        """Initialize the visualizer with the CVD data and chart slot."""
         super().__init__(chart_slot)
         self.cvd_analyzer = cvd_analyzer
 
@@ -28,6 +31,7 @@ class CVDVisualizer(PriceChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the CVD trace with direction-based marker colors."""
         combined = list(self.cvd_analyzer.content)
 
         x_vals = [r.time for r in combined]

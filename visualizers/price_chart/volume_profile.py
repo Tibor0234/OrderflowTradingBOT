@@ -3,9 +3,12 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_profile.model import VolumeProfile
 
 class VolumeProfileVisualizer(PriceChartVisualizer):
+    """Visualizes a volume profile with POC and value area levels."""
+
     uses_volume_axis = True
 
     def __init__(self, volume_profile: VolumeProfile, chart_slot: int):
+        """Initialize the visualizer with the volume profile and chart slot."""
         super().__init__(chart_slot)
         self.volume_profile = volume_profile
 
@@ -20,6 +23,7 @@ class VolumeProfileVisualizer(PriceChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the volume profile bar trace."""
         bins = self.volume_profile.content
 
         self.bar.x = [(b.buy_volume + b.sell_volume) for b in bins]
@@ -28,6 +32,7 @@ class VolumeProfileVisualizer(PriceChartVisualizer):
         return self.bar
 
     def get_shapes(self):
+        """Return shapes for the POC and value area boundaries."""
         shapes = []
 
         poc = self.volume_profile.poc

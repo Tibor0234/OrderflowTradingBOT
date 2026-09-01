@@ -15,7 +15,10 @@ from global_services.events.utils import EventBusMsgType
 
 
 class PositionManager:
+    """Manages orders, trades, account balance, and position execution state."""
+
     def __init__(self, starting_balance, order_book: ExecutionOrderBook, order_flow: ExecutionOrderFlow, maker_fee_pct=0.02, taker_fee_pct=0.06):
+        """Initialize the position manager with execution and account configuration."""
         self.starting_balance = Decimal(starting_balance)
         self.order_book = order_book
         self.order_flow = order_flow
@@ -42,44 +45,57 @@ class PositionManager:
 
     @property
     def floating_balance(self):
+        """Return the combined unrealized PnL of active trades."""
         return sum(t.floating_pnl for t in self.trades)
 
     @property
     def total_balance(self):
+        """Return the current account equity including realized and unrealized PnL."""
         locked_balance = sum(trade.value for trade in self.trades)
         return self.realized_balance + locked_balance + self.floating_balance
 
     def _set_liquidation_order(self, trade: Trade):
+        """Set the liquidation order for a trade."""
         self.trade_execution._set_liquidation_order(trade)
 
     def _get_trade(self, linked_order: IncreaseOrder | StopOrder):
+        """Return the trade associated with a linked order."""
         return self.trade_execution._get_trade(linked_order)
 
     def _is_source_open(self, linked_order: IncreaseOrder | StopOrder):
+        """Return whether the source of a linked order is still open."""
         return self.trade_execution._is_source_open(linked_order)
 
     def _finalize_trade(self, trade: Trade):
+        """Finalize and remove a completed trade from the execution state."""
         self.trade_execution._finalize_trade(trade)
 
     def _finalize_order(self, order: Order):
+        """Finalize and remove an order from the execution state."""
         self.order_execution._finalize_order(order)
 
     def _link_order_to_trade(self, order: Order, trade: Trade) -> IncreaseOrder:
+        """Convert an order to an increase order and link it to a trade."""
         return self.order_execution._link_order_to_trade(order, trade)
 
     def on_order_triggered(self, order: Order | IncreaseOrder):
+        """Execute a triggered order."""
         self.order_execution.on_order_triggered(order)
 
     def on_stop_order_triggered(self, stop_order: StopOrder):
+        """Execute a triggered stop order."""
         self.trade_execution.on_stop_order_triggered(stop_order)
 
     def place_order(self, order: Order | IncreaseOrder | StopOrder):
+        """Place an order into the appropriate execution queue."""
         self.order_execution.place_order(order)
 
     def cancel_order(self, order: Order | IncreaseOrder | StopOrder):
+        """Cancel an active order."""
         self.order_execution.cancel_order(order)
 
     def on_price_update(self):
+        """Process triggered orders and update account performance on price changes."""
         for order in self.orders.copy():
             if order.is_killed():
                 self._finalize_order(order)
@@ -105,6 +121,7 @@ class PositionManager:
                     eq.update(self.total_balance)
 
     def on_session_pair_start(self):
+        """Reset execution state and initialize performance tracking for a new session pair."""
         self.clear_state()
 
         for eq in self.equity_curves:
@@ -114,6 +131,7 @@ class PositionManager:
             st.session_pair_start(self.total_balance)
 
     def on_session_pair_end(self):
+        """Close expired trades and finalize session pair performance tracking."""
         self.trade_execution.close_expired_trades()
 
         for eq in self.equity_curves:
@@ -123,15 +141,18 @@ class PositionManager:
             st.update_on_price_change(self.total_balance, force=True)
 
     def clear_state(self):
+        """Clear all active orders, trades, and linked execution state."""
         self.orders.clear()
         self.increase_orders.clear()
         self.stop_orders.clear()
         self.trades.clear()
 
     def add_equity_curve(self, equity_curve: BaseEquityCurve):
+        """Register an equity curve for performance tracking."""
         self.equity_curves.append(equity_curve)
         return self
 
     def add_statistics(self, statistics: BaseStatistics):
+        """Register a statistics tracker for performance tracking."""
         self.statistics.append(statistics)
         return self

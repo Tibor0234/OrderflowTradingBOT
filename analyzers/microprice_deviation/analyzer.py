@@ -5,13 +5,18 @@ from analyzers.microprice_deviation.model import MicropriceDeviation
 from analyzers.utils import OscillatorRecord
 
 class MicropriceDeviationAnalyzer(Resource, OrderBookManagerSubscriber):
+    """Calculates the deviation of the microprice from the mid-price."""
+
     def __init__(self, length=10):
+        """Initialize the analyzer with a rolling deviation window."""
         self.model: MicropriceDeviation = MicropriceDeviation(length)
 
     def reset(self):
+        """Clear the stored deviation records."""
         self.model.content.clear()
 
     def process_message(self, msg: OrderBookMessage):
+        """Calculate and store the current microprice deviation."""
         best_bid_price = float(msg.bids[0].price)
         best_bid_vol = float(msg.bids[0].quantity)
 

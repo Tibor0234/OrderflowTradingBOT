@@ -4,7 +4,10 @@ from visualizers.market_entity.trade import TradeVisualizer
 from visualizers.data_analysis.statistics import StatisticsVisualizer
 
 class PanelContentRenderer:
+    """Builds dashboard panel content from application data."""
+
     def render_session_pair_panel(self, session_counter: SessionCounter):
+        """Render the current session and session-pair progress."""
         return (
             f"Session: {session_counter.session} / {session_counter.total_sessions} | "
             f"{session_counter.symbol}  "
@@ -13,11 +16,13 @@ class PanelContentRenderer:
         )
 
     def render_news_panel(self, news_data=None):
+        """Render the news panel content or its default placeholder."""
         if news_data:
             return news_data
         return "News Panel"
 
     def render_execution_panel(self, trade_visualizer: TradeVisualizer):
+        """Render execution data as an HTML table."""
         categories, values = trade_visualizer.get_panel_content()
 
         return html.Table([
@@ -37,6 +42,7 @@ class PanelContentRenderer:
         )
 
     def render_stats_panel(self, stats_visualizer: StatisticsVisualizer):
+        """Render statistics data as an HTML table."""
         categories, values = stats_visualizer.get_panel_content()
         return html.Table([
             html.Tbody([

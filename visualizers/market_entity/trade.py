@@ -5,13 +5,18 @@ from visualizers.market_entity.base import MarketEntityVisualizer
 from visualizers.utils import format_number
 
 class TradeVisualizer(MarketEntityVisualizer):
+    """Visualizes executed trades on the price chart and dashboard."""
+
     def __init__(self, trades: list[Trade]):
+        """Initialize the visualizer with executed trades."""
         self.trades = trades
 
     def get_traces(self):
+        """Return the Plotly traces for the executed trades."""
         return []
 
     def get_shapes(self):
+        """Return horizontal price levels for executed trades."""
         shapes = []
 
         for trade in self.trades:

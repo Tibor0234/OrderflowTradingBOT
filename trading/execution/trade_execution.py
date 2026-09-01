@@ -9,38 +9,48 @@ from global_services.events.utils import EventBusMsgType
 
 
 class TradeExecutionManager:
+    """Handles trade execution, partial closures, liquidation, and trade finalization."""
     def __init__(self, position_manager):
+        """Initialize the trade execution manager with the position manager."""
         self.position_manager = position_manager
 
     @property
     def trades(self):
+        """Return the currently active trades."""
         return self.position_manager.trades
 
     @property
     def increase_orders(self):
+        """Return the currently active increase orders."""
         return self.position_manager.increase_orders
 
     @property
     def stop_orders(self):
+        """Return the currently active stop orders."""
         return self.position_manager.stop_orders
 
     @property
     def order_book(self):
+        """Return the order book associated with the position manager."""
         return self.position_manager.order_book
 
     @property
     def order_flow(self):
+        """Return the order flow associated with the position manager."""
         return self.position_manager.order_flow
 
     @property
     def maker_fee_rate(self):
+        """Return the maker fee rate associated with the position manager."""
         return self.position_manager.maker_fee_rate
 
     @property
     def taker_fee_rate(self):
+        """Return the taker fee rate associated with the position manager."""
         return self.position_manager.taker_fee_rate
 
     def _set_liquidation_order(self, trade: Trade):
+        """Create or update the liquidation order for a trade."""
         liq_price = trade.execution_price - (trade.side.value * (trade.execution_price / trade.leverage))
         for linked_order in self.stop_orders:
             if isinstance(linked_order, LiquidationOrder) and linked_order.source_id == trade.id:
@@ -52,12 +62,15 @@ class TradeExecutionManager:
             self.stop_orders.append(liq_order)
 
     def _get_trade(self, linked_order: IncreaseOrder | StopOrder):
+        """Retrieve the trade associated with a linked order."""
         return next((t for t in self.trades if t.id == linked_order.source_id), None)
 
     def _is_source_open(self, linked_order: IncreaseOrder | StopOrder):
+        """Check if the source trade for a linked order is still open."""
         return self._get_trade(linked_order) is not None
 
     def _finalize_trade(self, trade: Trade):
+        """Close a trade, emit its completion event, and remove linked orders."""
         if trade in self.trades:
             trade.close_trade()
             self.trades.remove(trade)
@@ -70,6 +83,7 @@ class TradeExecutionManager:
         self.stop_orders[:] = [o for o in self.stop_orders if o.source_id != trade.id]
 
     def on_stop_order_triggered(self, stop_order: StopOrder):
+        """Execute a triggered stop order and apply the resulting trade closure."""
         trade = self._get_trade(stop_order)
         if not trade:
             return
@@ -112,6 +126,7 @@ class TradeExecutionManager:
             self._finalize_trade(trade)
 
     def close_expired_trades(self):
+        """Close all remaining trades at the end of a session pair."""
         for trade in list(self.trades):
             stop_order = ReduceOnly(pct=100)
             self.stop_orders.append(stop_order)

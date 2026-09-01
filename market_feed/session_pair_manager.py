@@ -4,10 +4,7 @@ from market_feed.utils import SessionCounter
 
 
 class SessionPairManager:
-    """
-    Kezeli a session paireket és a feldolgozási progresszust.
-    Felelős a session pairek betöltéséért és az iteráció követéséért.
-    """
+    """Manages session pairs and tracks replay progress."""
 
     def __init__(
         self,
@@ -15,6 +12,7 @@ class SessionPairManager:
         session_numbers: list[int | str] | None = None,
         symbols: list[str] | None = None,
     ):
+        """Initialize the manager and load the selected session pairs."""
         self.conn = conn
         self.session_numbers = self._parse_session_numbers(
             [] if session_numbers is None else session_numbers
@@ -35,7 +33,7 @@ class SessionPairManager:
         )
 
     def _load_session_pairs(self):
-        """Betölti a feldolgozandó session paireket időrendi sorrendben."""
+        """Load the selected session pairs in chronological order."""
         filters = []
         parameters = []
 
@@ -67,6 +65,7 @@ class SessionPairManager:
             return cursor.fetchall()
 
     def _validate_symbols(self):
+        """Validate that all requested symbols exist in the database."""
         if not self.symbols:
             return
 
@@ -85,6 +84,7 @@ class SessionPairManager:
             )
 
     def _load_all_session_pair_counts(self) -> dict[int, int]:
+        """Load the total number of session pairs for each session."""
         with self.conn.cursor() as cursor:
             cursor.execute("""
                 SELECT
@@ -97,6 +97,7 @@ class SessionPairManager:
 
     @staticmethod
     def _parse_session_numbers(values: list[int | str]) -> list[int]:
+        """Parse and validate session numbers and ranges."""
         if not isinstance(values, list):
             raise ValueError("sessions_numbers must be a list")
 
@@ -129,6 +130,7 @@ class SessionPairManager:
 
     @staticmethod
     def _parse_symbols(values: list[str]) -> list[str]:
+        """Normalize and validate the requested symbols."""
         if not isinstance(values, list):
             raise ValueError("symbols must be a list")
 
@@ -142,7 +144,7 @@ class SessionPairManager:
         return sorted(symbols)
 
     def get_next(self):
-        """Visszaadja a következő session pairt, vagy None ha nincs több."""
+        """Return the next session pair and update the replay progress."""
         if self.counter.session_pair >= len(self.session_pairs):
             return None
 
@@ -157,9 +159,9 @@ class SessionPairManager:
         return session_pair
 
     def has_next(self):
-        """Ellenőrzi, hogy van-e további session pair."""
+        """Return whether another session pair is available."""
         return self.counter.session_pair < len(self.session_pairs)
 
     def get_counter(self):
-        """Visszaadja az aktuális session counter objektumot."""
+        """Return the current session counter."""
         return self.counter

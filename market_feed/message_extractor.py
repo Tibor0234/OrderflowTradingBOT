@@ -1,13 +1,9 @@
 class MessageExtractor:
-    """Timestamp és egyéb metaadatok kinyerése üzenetekből."""
+    """Extracts timestamps and other metadata from market data messages."""
 
     @staticmethod
     def extract_timestamp(item):
-        """
-        Timestamp kinyerése az üzenetből.
-        
-        Az üzenet különböző formátumokat támogat.
-        """
+        """Extract a timestamp from a message using its supported fields."""
         return (
             item.get("T")
             or item.get("time")

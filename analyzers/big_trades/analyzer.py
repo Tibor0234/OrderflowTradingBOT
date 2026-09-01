@@ -13,7 +13,10 @@ from global_services.events.utils import EventBusMsgType
 
 
 class BigTradesAnalyzer(PriceChartResource, TradeManagerSubscriber):
+	"""Identifies trades whose quantity falls within the rolling top percentage."""
+
 	def __init__(self, length=100, sample_size=500, top_pct=5, visualize=True, chart_slot: int | None = None):
+		"""Initialize the analyzer with a rolling trade-quantity sample."""
 		super().__init__(chart_slot)
 		if length < 1:
 			raise ValueError("length must be at least 1")
@@ -33,17 +36,20 @@ class BigTradesAnalyzer(PriceChartResource, TradeManagerSubscriber):
 
 	@property
 	def visualizer(self):
+		"""Return the big-trade visualizer when visualization is enabled."""
 		if self.visualize:
 			from visualizers.price_chart.big_trades import BigTradesVisualizer
 			return BigTradesVisualizer(self.model, self.top_pct, self.chart_slot)
 		return None
 
 	def reset(self):
+		"""Clear detected trades and reset the rolling sample."""
 		self.model.content.clear()
 		self._quantities.clear()
 		self._sorted_quantities.clear()
 
 	def process_message(self, msg: TradeMessage):
+		"""Process a trade and emit an event when it qualifies as a big trade."""
 		is_big_trade = self.is_big_trade(msg.quantity)
 		if is_big_trade:
 			self.model.content.append(BigTradeRecord(
@@ -60,6 +66,7 @@ class BigTradesAnalyzer(PriceChartResource, TradeManagerSubscriber):
 		return is_big_trade
 
 	def _add_quantity(self, quantity: Decimal):
+		"""Add a quantity to the rolling sample while maintaining sorted order."""
 		if len(self._quantities) == self.sample_size:
 			expired_quantity = self._quantities.popleft()
 			expired_index = bisect_left(self._sorted_quantities, expired_quantity)

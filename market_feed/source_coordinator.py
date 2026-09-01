@@ -4,28 +4,21 @@ from market_feed.message_extractor import MessageExtractor
 
 
 class SourceCoordinator:
-    """
-    Kezeli az aktív adatforrásokat és azok állapotát.
-    Összehangol több generátort timestamp alapján.
-    """
+    """Coordinates multiple market data sources by timestamp."""
 
     def __init__(self, generator_factory: DatabaseGeneratorFactory):
+        """Initialize the coordinator with a database generator factory."""
         self.generator_factory = generator_factory
         self.extractor = MessageExtractor()
 
     def initialize_sources(self, session_pair_id):
-        """
-        Inicializálja az összes adatforrást egy session pair-hez.
-        
-        Visszaad egy dictionary-t a forrásokról, amely tartalmazza
-        a generátort és az első elemet.
-        """
+        """Initialize all data sources for the specified session pair."""
         sources = {}
         generator_methods = {
             EventType.TR: self.generator_factory.trade_generator,
             EventType.OB: self.generator_factory.orderbook_generator,
             EventType.OI: self.generator_factory.oi_generator,
-            EventType.OHLCV: self.generator_factory.context_generator,
+            EventType.OHLCV: self.generator_factory.ohlcv_generator,
             EventType.NWS: self.generator_factory.news_generator,
         }
 
@@ -42,7 +35,7 @@ class SourceCoordinator:
         return sources
 
     def get_active_sources(self, sources):
-        """Csak azokat a forrásokat adja vissza, amelyeknek van itemjük."""
+        """Return sources that currently have an available item."""
         return {
             event_type: source
             for event_type, source in sources.items()
@@ -50,11 +43,7 @@ class SourceCoordinator:
         }
 
     def select_next_source(self, active_sources):
-        """
-        Kiválasztja azt a forrást, amely a legkisebb timestampű itemet tartalmazza.
-        
-        A replay timestamp alapján koordinált.
-        """
+        """Return the source containing the item with the earliest timestamp."""
         if not active_sources:
             return None
 
@@ -66,7 +55,7 @@ class SourceCoordinator:
         )
 
     def advance_source(self, sources, event_type):
-        """Egy forrást előrelépteti a következő elemre."""
+        """Advance the specified source to its next item."""
         try:
             sources[event_type]["item"] = next(
                 sources[event_type]["generator"]

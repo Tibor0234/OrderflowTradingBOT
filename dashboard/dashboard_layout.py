@@ -2,9 +2,10 @@ from dash import html, dcc
 import plotly.graph_objects as go
 
 class DashboardLayout:
+    """Builds the Dash layout for the trading dashboard."""
 
     def build(self, price_chart_count=1):
-
+        """Build the complete dashboard layout."""
         return html.Div(
             style={
                 "height": "100vh",
@@ -20,7 +21,7 @@ class DashboardLayout:
         )
 
     def _main_row(self, price_chart_count):
-
+        """Build the main dashboard row containing the sidebars and charts."""
         return html.Div(
             style={
                 "flex": "1",
@@ -35,7 +36,7 @@ class DashboardLayout:
         )
 
     def _left_sidebar(self):
-
+        """Build the left sidebar with context charts and news."""
         return html.Div(
             style={
                 "flex": "1.5",
@@ -101,7 +102,7 @@ class DashboardLayout:
         )
 
     def _price_chart(self, price_chart_count):
-
+        """Build the price chart section."""
         return html.Div(
             style={
                 "flex": "4",
@@ -126,7 +127,7 @@ class DashboardLayout:
         )
 
     def _right_panel(self):
-
+        """Build the right panel with statistics and order information."""
         return html.Div(
             style={
                 "flex": "2",
@@ -188,7 +189,7 @@ class DashboardLayout:
         )
 
     def _session_column(self):
-
+        """Build the session statistics column."""
         return html.Div(
             style={
                 "flex": "1",
@@ -228,7 +229,7 @@ class DashboardLayout:
         )
 
     def _cumulative_column(self):
-
+        """Build the cumulative statistics column."""
         return html.Div(
             style={
                 "flex": "1",
@@ -267,7 +268,7 @@ class DashboardLayout:
         )
 
     def _interval(self):
-
+        """Create the interval component used to trigger dashboard updates."""
         return dcc.Interval(
             id="trigger-check",
             interval=1000,

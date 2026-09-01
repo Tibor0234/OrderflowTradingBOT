@@ -17,19 +17,7 @@ from session_pairs.utils import InstrumentMetadata
 
 
 class MarketFeed:
-    """
-    Egy Postgres adatbázisból történő market feed replay.
-    
-    Koordinálja a session paireket, adatforrásokat és az event forwarding-ot.
-    
-    A replay egysége egy session_pair:
-      - session 1 -> BTC
-      - session 1 -> ETH
-      - session 2 -> BTC
-      - session 2 -> ETH
-    
-    Ezek egymás után kerülnek feldolgozásra.
-    """
+    """Coordinates market data replay from database across session pairs."""
 
     def __init__(
         self,
@@ -42,6 +30,7 @@ class MarketFeed:
         session_numbers: list[int | str] | None = None,
         symbols: list[str] | None = None,
     ):
+        """Initialize the market feed and its replay components."""
         self.session_pair_manager = SessionPairManager(
             conn,
             session_numbers=session_numbers,
@@ -63,23 +52,11 @@ class MarketFeed:
 
     @property
     def session_counter(self):
-        """
-        Hozzáférést biztosít a session counter objektumhoz a dashboard számára.
-
-        Visszaadja a SessionCounter objektumot, amely tartalmazza:
-        - session: az adatbázis session azonosítója
-        - pair: az aktuális pair sorszáma az adott sessionön belül
-        - session_pair: az aktuális session pair globális sorszáma
-        - total_sessions: összes adatbázis session száma
-        - total_pairs: az aktuális session összes pairjének száma
-        - total_session_pairs: összes feldolgozandó session pair száma
-        """
+        """Return the session counter used to track replay progress."""
         return self.session_pair_manager.get_counter()
 
     async def run(self):
-        """
-        Főprogram: iterálja az összes session pairt és streameli az adatokat.
-        """
+        """Replay all available session pairs in sequence."""
         while True:
             session_pair = self.session_pair_manager.get_next()
 
@@ -91,7 +68,7 @@ class MarketFeed:
             await self._replay_session_pair(session_pair)
 
     async def _replay_session_pair(self, session_pair):
-        """Egy session pair összes adatát replaye."""
+        """Replay all market data sources for a single session pair."""
         session_pair_id, session_id, pair, created_at = session_pair
 
         print(

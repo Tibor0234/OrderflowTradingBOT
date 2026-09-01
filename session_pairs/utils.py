@@ -5,6 +5,8 @@ from decimal import Decimal
 
 @dataclass(frozen=True, slots=True)
 class InstrumentMetadata:
+    """Stores instrument metadata and trading constraints for a session pair."""
+    
     session_pair_id: int
     symbol: str
     status: str

@@ -1,6 +1,7 @@
 from dash import html
 
 def format_number(num):
+    """Format a numeric value with limited decimal places and thousands separators."""
     try:
         num = float(num)
     except:
@@ -17,6 +18,7 @@ def format_number(num):
     return str(num)
 
 def colorize_number(value, min_value, is_percentage=False):
+    """Format a value and color it based on a specified threshold."""
     num = float(value)
     color = "#4CAF50" if num >= min_value else "#FF5722"
 

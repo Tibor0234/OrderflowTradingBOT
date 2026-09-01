@@ -10,7 +10,10 @@ from analyzers.volume_profile.model import VolumeProfile
 
 
 class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
+    """Builds and maintains a rolling volume profile from trade data."""
+
     def __init__(self, price_bin_count=24, value_area_pct=70, length=100, visualize=True, chart_slot: int | None = None):
+        """Initialize the volume profile analyzer with the specified configuration."""
         super().__init__(chart_slot)
         self.visualize = visualize
 
@@ -24,12 +27,14 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
 
     @property
     def visualizer(self):
+        """Return the volume profile visualizer when visualization is enabled."""
         if self.visualize:
             from visualizers.price_chart.volume_profile import VolumeProfileVisualizer
             return VolumeProfileVisualizer(self.model, self.chart_slot)
         return None
 
     def reset(self):
+        """Clear the volume profile and reset all calculated state."""
         m = self.model
 
         m.content.clear()
@@ -42,6 +47,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
         self.poc_index = None
 
     def on_timeframe_update(self, msg: TradeMessage):
+        """Update the current volume profile with a new trade message."""
         m = self.model
 
         if m.current is None:
@@ -66,6 +72,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
             vol.sell_volume += msg.quantity
 
     def on_candle_close(self, next_time: int | None = None):
+        """Update the rolling profile and recalculate its derived metrics."""
         m = self.model
 
         deprecated = None
@@ -97,15 +104,14 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
             else:
                 self.update_profile(m.current, deprecated)
 
-        # ✅ ALWAYS recompute POC
         self.calculate_poc(m.content)
 
-        # value area már POC után
         self.calculate_value_area(m.content)
 
         m.current = None
 
     def _apply_volume(self, vol, bins, min_price, bin_size, sign):
+        """Distribute volume across price bins based on price overlap."""
         if vol.low is None or vol.high is None or vol.high == vol.low:
             return
 
@@ -132,6 +138,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
                 bins[i].sell_volume += sign * vol.sell_volume * weight
 
     def build_profile(self):
+        """Rebuild the volume profile from the complete rolling source."""
         m = self.model
 
         lows = [v.low for v in m.source if v.low is not None]
@@ -166,6 +173,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
         m.content.extend(bins)
 
     def update_profile(self, current_volume, deprecated_volume=None):
+        """Incrementally update the profile with new and expired volume."""
         m = self.model
 
         if not m.content:
@@ -180,6 +188,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
             self._apply_volume(deprecated_volume, m.content, min_price, bin_size, sign=-1)
 
     def calculate_poc(self, bins):
+        """Calculate the point of control from the current price bins."""
         m = self.model
 
         if not bins:
@@ -209,6 +218,7 @@ class VolumeProfileAnalyzer(PriceChartResource, TimeframeSubscriber):
         )
 
     def calculate_value_area(self, bins):
+        """Calculate the value area around the point of control."""
         m = self.model
 
         if not bins or self.poc_index is None:

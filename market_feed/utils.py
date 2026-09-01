@@ -2,6 +2,8 @@ from enum import Enum
 from dataclasses import dataclass
 
 class EventType(Enum):
+    """Defines the supported market data source types."""
+
     OI = 'api_oi'
     OB = 'api_ob'
     TR = 'ws_tr'
@@ -10,6 +12,8 @@ class EventType(Enum):
 
 @dataclass(slots=True)
 class SessionCounter:
+    """Stores session and session-pair replay progress."""
+    
     session: int | None
     symbol: str | None
     pair: int

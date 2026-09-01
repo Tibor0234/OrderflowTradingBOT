@@ -7,7 +7,10 @@ from analyzers.ohlcv_timeframe.analyzer import OHLCVTimeframeSubscriber
 from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 
 class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
+    """Builds a volume profile from OHLCV candles and calculates its value area."""
+
     def __init__(self, price_bin_count=24, value_area_pct=70, visualize=True):
+        """Initialize the volume profile analyzer with the specified configuration."""
         self.model: OHLCVVolumeProfile = OHLCVVolumeProfile(price_bin_count, value_area_pct)
         self.visualize = visualize
 
@@ -15,15 +18,18 @@ class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
 
     @property
     def visualizer(self):
+        """Return the volume profile visualizer when visualization is enabled."""
         if self.visualize:
             from visualizers.context_chart.volume_profile import OHLCVVolumeProfileVisualizer
             return OHLCVVolumeProfileVisualizer(self.model)
         return None
 
     def set_period(self, period: OHLCVPeriod):
+        """Set the OHLCV timeframe period for the volume profile model."""
         self.model.period = period
 
     def reset(self):
+        """Clear the volume profile and reset all calculated values."""
         self.model.content.clear()
         self.model.poc = None
         self.model.value_area = None
@@ -31,6 +37,7 @@ class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
         self.model.start_time = None
 
     def on_ohlcv_timeframe_update(self, msg: OHLCVMessage):
+        """Recalculate the volume profile from the latest timeframe candles."""
         self.model.start_time = min(c.time for c in msg.candles)
 
         volumes = [c.volume for c in msg.candles]
@@ -67,6 +74,7 @@ class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
         self._calculate_value_area()
 
     def _apply_volumes(self, candles, volumes, bins, min_price, bin_size):
+        """Distribute candle volume across price bins based on price overlap."""
         poc_volume = Decimal(0)
         poc_index = 0
 
@@ -104,6 +112,7 @@ class OHLCVVolumeProfileAnalyzer(Resource, OHLCVTimeframeSubscriber):
         return poc_volume, poc_index
 
     def _calculate_value_area(self):
+        """Calculate the value area of the volume profile based on the target volume."""
         bins = self.model.content
 
         total_volume = sum(b.volume for b in bins)

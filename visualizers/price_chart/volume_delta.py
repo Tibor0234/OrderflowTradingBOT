@@ -3,6 +3,8 @@ from visualizers.price_chart.base import PriceChartVisualizer
 from analyzers.volume_delta.model import VolumeDelta
 
 class VolumeDeltaVisualizer(PriceChartVisualizer):
+    """Visualizes volume delta as a directional oscillator."""
+
     is_oscillator = True
 
     def __init__(
@@ -11,6 +13,7 @@ class VolumeDeltaVisualizer(PriceChartVisualizer):
         big_trades_top_pct: float | None = None,
         chart_slot: int = 0,
     ):
+        """Initialize the visualizer with the volume delta data and chart slot."""
         super().__init__(chart_slot)
         self.volume_delta_analyzer = volume_delta_analyzer
 
@@ -26,6 +29,7 @@ class VolumeDeltaVisualizer(PriceChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the volume delta bar trace with direction-based colors."""
         combined = list(self.volume_delta_analyzer.content)
 
         x_vals = [r.time for r in combined]

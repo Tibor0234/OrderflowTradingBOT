@@ -8,14 +8,19 @@ from global_services.events.bus import EventBus
 from global_services.events.utils import EventBusMsgType
 
 class TradeManager(DataManager):
+    """Manages trade messages and forwards them to subscribers."""
+
     def __init__(self):
+        """Initialize the trade manager and its subscribers."""
         self.subscribers: list[TradeManagerSubscriber] = []
 
     def subscribe(self, subscriber: TradeManagerSubscriber):
+        """Subscribe a consumer to receive trade updates."""
         self.subscribers.append(subscriber)
         return self
 
     def forward_message(self, msg):
+        """Convert a raw trade message, update market state, and notify subscribers."""
         conv_msg = TradeMessage(
             time=int(msg["E"]),
             price=Decimal(msg["p"]),

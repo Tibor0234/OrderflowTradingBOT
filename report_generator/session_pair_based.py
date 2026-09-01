@@ -5,7 +5,10 @@ from report_generator.base import BaseReportGenerator
 
 
 class SessionPairBasedReportGenerator(BaseReportGenerator):
+    """Generates a separate trading report for each session pair."""
+
     def __init__(self, report_directory):
+        """Initialize the report generator and subscribe to relevant events."""
         super().__init__(report_directory)
         self.session_pair_start_time = None
 
@@ -14,16 +17,20 @@ class SessionPairBasedReportGenerator(BaseReportGenerator):
         EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_report)
 
     def _get_current_time(self):
+        """Return the current replay timestamp."""
         return DataProvider().get_time()
 
     def _reset_session_pair_start_time(self):
+        """Reset the start time for the current session pair."""
         self.session_pair_start_time = None
 
     def _capture_session_pair_start_time(self):
+        """Capture the session pair start time from the first price update."""
         if self.session_pair_start_time is None:
             self.session_pair_start_time = self._get_current_time()
 
     def generate_report(self):
+        """Generate the report for the current session pair."""
         symbol = DataProvider().get_symbol()
         session_number = self.session_counter.session
         report_path = self.report_directory / f"session_{session_number}-{symbol}.pdf"
@@ -36,10 +43,12 @@ class SessionPairBasedReportGenerator(BaseReportGenerator):
         )
 
     def set_session_counter(self, session_counter):
+        """Set the session counter used to identify the current session."""
         self.session_counter = session_counter
         return self
 
     def set_visualizers(self, equity_visualizer, statistics_visualizer):
+        """Set the visualizers used to generate the report."""
         self.equity_visualizer = equity_visualizer
         self.statistics_visualizer = statistics_visualizer
         return self

@@ -7,6 +7,8 @@ from trading.market_entities.stop_order import StopOrder
 from trading.market_entities.increase_order import IncreaseOrder, IncreaseLimitOrder
 
 class Order(ABC):
+    """Represents a base order with execution and lifetime management."""
+
     def __init__(
         self,
         side: Side,
@@ -18,6 +20,7 @@ class Order(ABC):
         kill_after_fill: int = None,
         metadata: dict[str, object] | None = None,
     ):
+        """Initialize the order with its execution parameters and lifetime settings."""
         self.id = uuid.uuid4()
         self.type: OrderType = type
         self.side: Side = side
@@ -34,15 +37,19 @@ class Order(ABC):
 
 
     def place(self):
+        """Record the order placement timestamp."""
         self.place_time = DataProvider().get_time()
 
     def on_partial_fill(self):
+        """Record the timestamp of a partial fill."""
         self.fill_time = DataProvider().get_time()
 
     def is_filled(self) -> bool:
+        """Return whether the order has been fully filled."""
         return self.value <= 0
 
     def is_killed(self) -> bool:
+        """Return whether the order has exceeded its configured lifetime."""
         now = DataProvider().get_time()
         
         if not self.place_time:
@@ -58,10 +65,12 @@ class Order(ABC):
         return False
 
     def link(self, linked_order: IncreaseOrder | StopOrder):
+        """Link an increase or stop order to this order."""
         linked_order.set_from_source(self.id, self.side)
         return self
     
     def link_many(self, linked_orders: list[IncreaseOrder | StopOrder]):
+        """Link multiple increase or stop orders to this order."""
         if not isinstance(linked_orders, list):
             linked_orders = [linked_orders]
         
@@ -71,19 +80,27 @@ class Order(ABC):
         return self
 
     def is_triggered(self) -> bool:
+        """Return whether the order conditions are currently met."""
         if self.type == OrderType.MARKET:
             return True
         price = DataProvider().get_price()
         return (price - self.entry_price) * (-self.side.value) >= 0
     
     def convert_to_increase_order(self) -> IncreaseLimitOrder:
+        """Convert the order into an increase limit order."""
         return IncreaseLimitOrder(self.value, self.entry_price, self.leverage, self.kill_after_fill, self.metadata)
 
 
 class LimitOrder(Order):
+    """Represents a limit order with a specified entry price."""
+
     def __init__(self, side: Side, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill: int = None, kill_after_fill: int = None, metadata: dict[str, object] | None = None):
+        """Initialize a limit order."""
         super().__init__(side=side, value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill=kill, kill_after_fill=kill_after_fill, metadata=metadata)
 
 class MarketOrder(Order):
+    """Represents a market order executed at the available market price."""
+
     def __init__(self, side: Side, value: Decimal, leverage: float = 1.0, metadata: dict[str, object] | None = None):
+        """Initialize a market order."""
         super().__init__(side=side, value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill=None, kill_after_fill=None, metadata=metadata)

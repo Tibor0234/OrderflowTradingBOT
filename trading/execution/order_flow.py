@@ -6,11 +6,15 @@ from trading.market_entities.utils import Side
 
 
 class ExecutionOrderFlow(TradeManagerSubscriber):
+	"""Simulates limit order execution against incoming trade flow."""
+
 	def __init__(self):
+		"""Initialize the current trade and remaining executable quantity."""
 		self.trade: TradeMessage | None = None
 		self.remaining_quantity = Decimal(0)
 
 	def process_message(self, msg: TradeMessage):
+		"""Update the current trade flow and its remaining quantity."""
 		self.trade = msg
 		self.remaining_quantity = msg.quantity
 
@@ -21,6 +25,7 @@ class ExecutionOrderFlow(TradeManagerSubscriber):
 		side: Side,
 		entry_price: Decimal,
 	) -> tuple[Decimal, Decimal]:
+		"""Calculate the fill price and value for a matching limit order."""
 		if not self.trade or self.remaining_quantity <= 0:
 			return Decimal(0), Decimal(0)
 

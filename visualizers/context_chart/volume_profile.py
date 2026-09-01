@@ -3,9 +3,12 @@ from visualizers.context_chart.base import ContextChartVisualizer
 from analyzers.ohlcv_volume_profile.model import OHLCVVolumeProfile
 
 class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
+    """Visualizes an OHLCV volume profile with POC and value area levels."""
+
     uses_volume_axis = True
 
     def __init__(self, volume_profile: OHLCVVolumeProfile):
+        """Initialize the visualizer with the specified volume profile."""
         self.volume_profile = volume_profile
         self.period = self.volume_profile.period
 
@@ -20,6 +23,7 @@ class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
         )
 
     def get_traces(self):
+        """Return the volume profile bar trace."""
         bins = self.volume_profile.content
 
         if not bins:
@@ -33,6 +37,7 @@ class OHLCVVolumeProfileVisualizer(ContextChartVisualizer):
         return self.bar
 
     def get_shapes(self):
+        """Return shapes for the POC and value area boundaries."""
         shapes = []
 
         if self.volume_profile.poc is None:

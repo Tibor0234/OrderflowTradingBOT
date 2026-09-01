@@ -3,7 +3,10 @@ from decimal import Decimal
 from trading.market_entities.trade import Trade
 
 class BaseStatistics(ABC):
+    """Provides the base logic for tracking trading performance statistics."""
+
     def __init__(self, refresh_rate=50):
+        """Initialize the statistics tracker with the configured refresh rate."""
         self._refresh_rate = refresh_rate
         self._update_count = 0
 
@@ -12,6 +15,7 @@ class BaseStatistics(ABC):
         self._reset()
 
     def _reset(self):
+        """Reset all tracked performance statistics."""
         self.total_trades = 0
         self.trades_won = 0
         self.trades_lost = 0
@@ -26,9 +30,11 @@ class BaseStatistics(ABC):
 
     @abstractmethod
     def session_pair_start(self, starting_balance):
+        """Initialize statistics for a new session pair."""
         pass
 
     def update_on_trade_close(self, trade: Trade):
+        """Update trade statistics when a trade is closed."""
         self.total_trades += 1
         self.pnl += trade.realized_pnl
 
@@ -52,6 +58,7 @@ class BaseStatistics(ABC):
             self.average_trade_duration = trade_duration_s
 
     def update_on_price_change(self, equity, force=False):
+        """Update equity-based statistics when the refresh interval is reached."""
         self._update_count += 1
 
         if force or self._update_count >= self._refresh_rate:

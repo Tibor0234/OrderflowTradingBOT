@@ -8,9 +8,7 @@ from market_feed.utils import EventType
 
 
 class EventForwarder:
-    """
-    Üzenetek irányítása a megfelelő manager felé event_type alapján.
-    """
+    """Routes incoming events to the corresponding data manager."""
 
     def __init__(
         self,
@@ -20,6 +18,7 @@ class EventForwarder:
         ohlcv_manager: OHLCVManager,
         news_manager: NewsManager,
     ):
+        """Initialize the forwarder with the available data managers."""
         self.managers = {
             EventType.OI: open_interest_manager,
             EventType.OB: orderbook_manager,
@@ -29,7 +28,7 @@ class EventForwarder:
         }
 
     def forward(self, event_type, message):
-        """Üzenet továbbítása a megfelelő managernek."""
+        """Forward a message to the manager associated with the event type."""
         manager = self.managers.get(event_type)
         if manager:
             manager.forward_message(message)

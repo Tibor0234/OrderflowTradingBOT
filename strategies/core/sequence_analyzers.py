@@ -3,12 +3,14 @@ from global_services.data.provider import DataProvider
 from strategies.core.utils import MonotonicTrend, Outlier
 
 class SequenceAnalyzers:
-    # generic sequence analysis methods
+    """Provides reusable methods for analyzing sequences of market data."""
 
     def has_min_length(self, sequence, length):
+        """Return whether the sequence contains at least the specified number of elements."""
         return len(sequence) >= length
 
     def get_monotonic_trend(self, sequence, source_name):
+        """Determine the direction and length of the latest monotonic trend."""
         if not sequence:
             return MonotonicTrend(False, 0, 0)
 
@@ -40,6 +42,7 @@ class SequenceAnalyzers:
         return MonotonicTrend(length >= 3, length, direction)
     
     def get_trend_strength(self, sequence, source_name, recent_bias_pct=0, length=None):
+        """Calculate normalized trend strength with optional weighting toward recent values."""
         recent_bias_rate = recent_bias_pct / 100.0
 
         if length is None:
@@ -92,6 +95,7 @@ class SequenceAnalyzers:
         return float(np.tanh(raw))
     
     def get_outlier(self, sequence, source_name, length=None):
+        """Detect whether the latest movement is an outlier relative to recent movements."""
         if length is None:
             length = len(sequence)
 
@@ -127,6 +131,7 @@ class SequenceAnalyzers:
         )
 
     def get_local_swings(self, sequence, source_name, direction, swing_length, length=None):
+        """Find local swing highs or lows within the specified sequence range."""
         if not sequence or swing_length <= 0:
             return []
 
@@ -177,10 +182,8 @@ class SequenceAnalyzers:
 
         return out
 
-    # big trades sequence analysis methods
-
     def get_big_trade_dominance(self, sequence, window_seconds=None, length=None):
-        """Returns volume-weighted big-trade dominance in the range [-1, 1]."""
+        """Return volume-weighted big-trade dominance in the range [-1, 1]."""
         if window_seconds is not None and window_seconds <= 0:
             raise ValueError("window_seconds must be greater than 0")
 
@@ -213,7 +216,7 @@ class SequenceAnalyzers:
         return (buy_volume - sell_volume) / total_volume
 
     def get_big_trade_intensity(self, sequence, window_seconds=60, length=None):
-        """Returns the number of big trades per minute in the time window."""
+        """Return the number of big trades per minute in the time window."""
         if window_seconds <= 0:
             raise ValueError("window_seconds must be greater than 0")
 

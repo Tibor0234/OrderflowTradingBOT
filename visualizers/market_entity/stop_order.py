@@ -5,13 +5,18 @@ from visualizers.market_entity.base import MarketEntityVisualizer
 from visualizers.utils import format_number
 
 class StopOrderVisualizer(MarketEntityVisualizer):
+    """Visualizes stop orders on the price chart and dashboard."""
+
     def __init__(self, stop_orders: list[StopOrder]):
+        """Initialize the visualizer with stop orders."""
         self.stop_orders = stop_orders
 
     def _visible_orders(self):
+        """Return stop orders that are not liquidation orders."""
         return [order for order in self.stop_orders if not isinstance(order, LiquidationOrder)]
 
     def get_shapes(self):
+        """Return horizontal price levels for visible stop orders."""
         shapes = []
 
         for order in self._visible_orders():
@@ -21,7 +26,6 @@ class StopOrderVisualizer(MarketEntityVisualizer):
             price = float(order.price)
             is_long = order.side == Side.BUY
 
-            # ---- STOP VONAL PAPER KOORDINÁTÁKKAL ----
             shapes.append(dict(
                 type="line",
                 xref="paper",
@@ -40,6 +44,7 @@ class StopOrderVisualizer(MarketEntityVisualizer):
         return shapes
 
     def get_panel_content(self):
+        """Return stop order details formatted for the dashboard panel."""
         categories = [
             "Side",
             "Close Rate (%)",

@@ -12,10 +12,13 @@ from trading.market_entities.utils import Side
 
 
 class TradeExcelExporter:
+    """Exports closed trades to an Excel workbook grouped by session pair."""
+
     HEADERS = ["Symbol", "Side", "Avg Entry Price", "Avg Close Price", "Invested Value (USD)", "Leverage", "Realized PnL (USD)", "Open Time", "Close Time", "Duration (s)"]
     INVALID_SHEET_CHARS = str.maketrans({char: "-" for char in "\\/*?:[]"})
 
     def __init__(self, report_directory: Path):
+        """Initialize the exporter and subscribe to trade lifecycle events."""
         self.report_directory = report_directory
         self.session_counter = None
         self.session_trades: list[Trade] = []
@@ -28,13 +31,16 @@ class TradeExcelExporter:
         EventBus().subscribe(EventBusMsgType.PROCESS_END, self._save_workbook)
 
     def set_session_counter(self, session_counter):
+        """Set the session counter used to identify session sheets."""
         self.session_counter = session_counter
         return self
 
     def _on_trade_close(self, trade: Trade):
+        """Store a closed trade for the current session pair."""
         self.session_trades.append(trade)
 
     def _on_session_pair_end(self):
+        """Export the current session pair's trades to a dedicated worksheet."""
         if not self.session_trades:
             return
 
@@ -66,16 +72,19 @@ class TradeExcelExporter:
         self._save_workbook()
 
     def _save_workbook(self):
+        """Save the workbook to the configured report directory."""
         if not self.workbook.sheetnames:
             return
         self.workbook.save(self.report_directory / "trades.xlsx")
 
     @staticmethod
     def _format_time(timestamp_ms):
+        """Convert a millisecond timestamp to a formatted datetime string."""
         return datetime.fromtimestamp(timestamp_ms / 1000).strftime("%Y-%m-%d %H:%M:%S")
 
     @staticmethod
     def _format_metadata_value(value):
+        """Convert a trade metadata value to an Excel-compatible representation."""
         if isinstance(value, Decimal):
             return round(float(value), 5)
         if value is None or isinstance(value, (str, int, bool)):

@@ -7,38 +7,49 @@ from trading.market_entities.utils import OrderType
 
 
 class OrderExecutionManager:
+    """Handles order placement, cancellation, and execution against market liquidity."""
+
     def __init__(self, position_manager):
+        """Initialize the execution manager with the position manager."""
         self.position_manager = position_manager
 
     @property
     def orders(self):
+        """Return the currently active orders."""
         return self.position_manager.orders
 
     @property
     def increase_orders(self):
+        """Return the currently active position increase orders."""
         return self.position_manager.increase_orders
 
     @property
     def stop_orders(self):
+        """Return the currently active stop orders."""
         return self.position_manager.stop_orders
 
     @property
     def order_book(self):
+        """Return the execution order book."""
         return self.position_manager.order_book
 
     @property
     def order_flow(self):
+        """Return the order flow used for limit order execution."""
         return self.position_manager.order_flow
 
     @property
     def maker_fee_rate(self):
+        """Return the configured maker fee rate."""
         return self.position_manager.maker_fee_rate
 
     @property
     def taker_fee_rate(self):
+        """Return the configured taker fee rate."""
         return self.position_manager.taker_fee_rate
 
     def _finalize_order(self, order: Order):
+        """Remove an order and all dependent orders from the execution state."""
         if order in self.orders:
             self.orders.remove(order)
 
@@ -46,6 +57,7 @@ class OrderExecutionManager:
         self.stop_orders[:] = [o for o in self.stop_orders if o.source_id != order.id]
 
     def _link_order_to_trade(self, order: Order, trade: Trade) -> IncreaseOrder:
+        """Convert an order into an increase order and link it to the trade."""
         increase_order = order.convert_to_increase_order()
         self.orders.remove(order)
         trade.link(increase_order)
@@ -53,6 +65,7 @@ class OrderExecutionManager:
         return increase_order
 
     def place_order(self, order: Order | IncreaseOrder):
+        """Add an order to the appropriate execution queue."""
         if isinstance(order, Order):
             order.place()
             self.orders.append(order)
@@ -62,6 +75,7 @@ class OrderExecutionManager:
             self.stop_orders.append(order)
 
     def cancel_order(self, order: Order | IncreaseOrder):
+        """Remove an active order from the execution queues."""
         if isinstance(order, Order):
             self._finalize_order(order)
         else:
@@ -71,6 +85,7 @@ class OrderExecutionManager:
                 self.stop_orders.remove(order)
 
     def on_order_triggered(self, order: Order | IncreaseOrder):
+        """Execute a triggered order, update the associated trade, and apply fees."""
         is_limit = order.type == OrderType.LIMIT
 
         if is_limit:

@@ -5,8 +5,10 @@ from visualizers.context_chart.base import ContextChartVisualizer
 from visualizers.data_analysis.equity_curve import EquityCurveVisualizer
 
 class ChartRenderer:
-    def build_price_chart(self, execution_visualizers: list[MarketEntityVisualizer], price_visualizers: list[PriceChartVisualizer]):
+    """Builds Plotly charts from market and analysis visualizers."""
 
+    def build_price_chart(self, execution_visualizers: list[MarketEntityVisualizer], price_visualizers: list[PriceChartVisualizer]):
+        """Build the main price chart with execution overlays and oscillator panels."""
         fig = go.Figure()
         shapes = []
         oscillators = [
@@ -40,12 +42,13 @@ class ChartRenderer:
 
     @staticmethod
     def _assign_oscillator_axis(traces, axis_number: int):
+        """Assign all traces to the specified oscillator y-axis."""
         yaxis = f"y{axis_number}"
         for trace in traces if isinstance(traces, (list, tuple)) else [traces]:
             trace.yaxis = yaxis
 
     def build_context_chart(self, visualizers: list[ContextChartVisualizer]):
-
+        """Build the context chart from the provided visualizers."""
         fig = go.Figure()
         shapes = []
         has_volume_profile = any(
@@ -62,7 +65,7 @@ class ChartRenderer:
         return fig
 
     def build_equity_curve(self, visualizer: EquityCurveVisualizer):
-
+        """Build the equity curve chart from the provided visualizer."""
         fig = go.Figure()
         shapes = []
 
@@ -75,7 +78,7 @@ class ChartRenderer:
         return fig
 
     def _base_layout(self):
-
+        """Return the common layout configuration shared by all charts."""
         return dict(
             autosize=True,
             plot_bgcolor="black",
@@ -86,6 +89,7 @@ class ChartRenderer:
         )
 
     def _price_layout(self, shapes, oscillator_count: int, has_volume_profile: bool):
+        """Build the layout for the price chart and its oscillator panels."""
         oscillator_height = 0.2 * (1.35 ** (oscillator_count - 1)) if oscillator_count else 0
         panel_height = oscillator_height / oscillator_count if oscillator_count else 0
 
@@ -164,7 +168,7 @@ class ChartRenderer:
         return layout
 
     def _context_layout(self, shapes, has_volume_profile=False):
-
+        """Build the layout for the context chart."""
         layout = self._base_layout()
 
         layout.update(
@@ -212,7 +216,7 @@ class ChartRenderer:
         return layout
 
     def _equity_layout(self, shapes):
-
+        """Build the layout for the equity curve chart."""
         layout = self._base_layout()
 
         layout.update(

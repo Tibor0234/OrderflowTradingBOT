@@ -1,14 +1,8 @@
-"""
-Market Feed - Postgres replay orchestrator és komponensei.
+"""Market feed orchestration and replay components.
 
-Komponensek:
-- MarketFeed: Fő orchestrator
-- SessionPairManager: Session párok kezelése
-- DatabaseGeneratorFactory: Generátorok factory
-- SourceCoordinator: Adatforrások koordinációja
-- EventForwarder: Üzenetek irányítása
-- MessageExtractor: Metaadatok kinyerése
-- SessionCounter: Session és session-pair feldolgozási progresszus
+Provides the main market feed orchestrator and its supporting components for
+session management, data generation, source coordination, event forwarding,
+and message metadata extraction.
 """
 
 from market_feed.feed import MarketFeed

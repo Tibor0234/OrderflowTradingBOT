@@ -8,7 +8,10 @@ from visualizers.price_chart.base import PriceChartVisualizer
 
 
 class BigTradesVisualizer(PriceChartVisualizer):
+    """Visualizes detected big trades as price markers sized by trade quantity."""
+
     def __init__(self, big_trades: BigTrades, top_pct: float, chart_slot: int):
+        """Initialize the visualizer with the big trade model and chart slot."""
         super().__init__(chart_slot)
         self.big_trades = big_trades
         self.top_pct = top_pct
@@ -31,6 +34,7 @@ class BigTradesVisualizer(PriceChartVisualizer):
         )
 
     def get_traces(self):
+        """Return buy and sell markers for the detected big trades."""
         buys = []
         sells = []
 

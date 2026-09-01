@@ -6,3 +6,4 @@ dash
 numpy
 reportlab
 openpyxl
+pytest

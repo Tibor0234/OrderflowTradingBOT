@@ -1,3 +1,5 @@
+"""Provides essential imports and definitions for trading strategies."""
+
 from decimal import Decimal
 
 from strategies.core.base_strategy import BaseStrategy

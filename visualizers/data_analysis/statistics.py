@@ -3,6 +3,7 @@ from data_analysis.statistics.base import BaseStatistics
 from visualizers.utils import colorize_number, format_number
 
 def _format_trade_duration(seconds: float) -> str:
+    """Format a duration in seconds as hours, minutes, and seconds."""
     hours = int(seconds // 3600)
     remaining_seconds = seconds % 3600
     minutes = int(remaining_seconds // 60)
@@ -10,7 +11,9 @@ def _format_trade_duration(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{remaining_seconds:02d}"
 
 class StatisticsVisualizer:
-    # Maps config key -> (display label, value extractor)
+    """Builds dashboard content from trading statistics."""
+
+    # Maps statistic keys to their display labels and value extractors
     STAT_DEFINITIONS = {
         "total_trades": ("Total Trades", lambda s: s.total_trades),
         "trades_won": ("Trades Won", lambda s: s.trades_won),
@@ -28,10 +31,12 @@ class StatisticsVisualizer:
     DEFAULT_STATS = list(STAT_DEFINITIONS.keys())
 
     def __init__(self, statistics: BaseStatistics, stats: list[str] = None):
+        """Initialize the visualizer with the statistics and selected metrics."""
         self.statistics = statistics
         self.stats = stats if stats is not None else self.DEFAULT_STATS
 
     def get_panel_content(self):
+        """Return statistic labels and formatted values for the dashboard panel."""
         categories = []
         values = []
         for key in self.stats:

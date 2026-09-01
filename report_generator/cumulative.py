@@ -5,7 +5,10 @@ from report_generator.base import BaseReportGenerator
 
 
 class CumulativeReportGenerator(BaseReportGenerator):
+    """Generates a cumulative trading report across all session pairs."""
+
     def __init__(self, report_directory):
+        """Initialize the report generator and subscribe to relevant events."""
         super().__init__(report_directory)
         self.replay_start_time = None
 
@@ -13,13 +16,16 @@ class CumulativeReportGenerator(BaseReportGenerator):
         EventBus().subscribe(EventBusMsgType.SESSION_PAIR_END, self.generate_report)
 
     def _get_current_time(self):
+        """Return the current replay timestamp."""
         return DataProvider().get_time()
 
     def _capture_replay_start_time(self):
+        """Capture the replay start time from the first price update."""
         if self.replay_start_time is None:
             self.replay_start_time = self._get_current_time()
 
     def generate_report(self):
+        """Generate the cumulative report when the replay session ends."""
         if self.replay_start_time is None:
             return
 
@@ -32,6 +38,7 @@ class CumulativeReportGenerator(BaseReportGenerator):
         )
 
     def set_visualizers(self, equity_visualizer, statistics_visualizer):
+        """Set the visualizers used to generate the report."""
         self.equity_visualizer = equity_visualizer
         self.statistics_visualizer = statistics_visualizer
         return self

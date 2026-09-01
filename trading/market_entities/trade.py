@@ -8,8 +8,11 @@ from trading.market_entities.increase_order import IncreaseOrder
 from global_services.data.provider import DataProvider
 
 class Trade:
+    """Represents an active trading position and its execution state."""
+
     @classmethod
     def convert_from_order(cls, order: Order, execution_price, value) -> Trade:
+        """Create a trade from an executed order."""
         return cls(
             id=order.id,
             execution_price=execution_price,
@@ -20,6 +23,7 @@ class Trade:
         )
 
     def __init__(self, id: uuid.UUID, execution_price, side: Side, value, leverage, metadata: dict[str, object] | None = None):
+        """Initialize the trade with its execution and position parameters."""
         self.id = id
         self.execution_price = execution_price
         self.side = side
@@ -33,10 +37,12 @@ class Trade:
         self.open_time = DataProvider().get_time()
     
     def link(self, linked_order: IncreaseOrder | StopOrder):
+        """Link an increase or stop order to this trade."""
         linked_order.set_from_source(self.id, self.side)
         return self
     
     def link_many(self, linked_orders: list[IncreaseOrder | StopOrder]):
+        """Link multiple increase or stop orders to this trade."""
         if not isinstance(linked_orders, list):
             linked_orders = [linked_orders]
         
@@ -46,6 +52,7 @@ class Trade:
         return self
 
     def update_on_fill(self, execution_price: Decimal, value: Decimal, leverage: Decimal):
+        """Update the trade after an additional position fill."""
         total_value = self.value + value
     
         self.execution_price = (self.execution_price * self.value + execution_price * value) / total_value
@@ -54,26 +61,32 @@ class Trade:
         self.invested_value += value
 
     def update_metadata(self, metadata: dict[str, object]):
+        """Update the trade metadata with the provided values."""
         self.metadata.update(metadata)
 
     @property
     def floating_pnl(self):
+        """Return the unrealized profit or loss at the current market price."""
         price = DataProvider().get_price()
         return self.floating_pnl_from_price(price)
 
     def floating_pnl_from_price(self, price: Decimal):
+        """Calculate the unrealized profit or loss at a specified price."""
         return (price - self.execution_price) * self.side.value * (self.value * self.leverage) / self.execution_price
     
     def charge_fee(self, fee_rate: Decimal):
+        """Charge a fee based on the trade's current position value."""
         return self.charge_fee_from_value(self.value, fee_rate)
 
     def charge_fee_from_value(self, value, fee_rate: Decimal):
+        """Charge a fee based on the specified position value."""
         fee = (value * self.leverage) * fee_rate
         self.realized_pnl -= fee
 
         return fee
 
     def close_trade_partial(self, execuiton_price: Decimal, close_rate: Decimal):
+        """Partially close the trade and realize the corresponding PnL."""
         float_pnl = self.floating_pnl_from_price(execuiton_price)
 
         closed_value = self.value * close_rate
@@ -91,7 +104,9 @@ class Trade:
         return closed_value, realized
     
     def is_active(self):
+        """Return whether the trade still has an open position."""
         return self.value > 0
     
     def close_trade(self):
+        """Mark the trade as closed at the current market time."""
         self.close_time = DataProvider().get_time()

@@ -27,6 +27,7 @@ from data_analysis.equity_curve.cumulative import CumulativeEquityCurve
 from data_analysis.statistics.session_pair_based import SessionPairBasedStatistics
 from data_analysis.statistics.cumulative import CumulativeStatistics
 from trading.execution.order_book import ExecutionOrderBook
+from trading.execution.order_flow import ExecutionOrderFlow
 from session_pairs.context import SessionPairContext
 from strategies.core.framework import StrategyFramework
 from report_generator.base import BaseReportGenerator

@@ -17,8 +17,10 @@ from analyzers.ohlcv_volume_profile.analyzer import OHLCVVolumeProfileAnalyzer
 from strategies.executable.test import TestStrategy
 
 class ResourceConfig:
+    """Configures the strategy, resources, and their dependencies."""
 
     def get_essentials(self):
+        """Build and return the configured strategy, resources, and visualizers."""
         # ==================== USER CONFIG ====================
         # Select the strategy to execute.
         strategy = TestStrategy()
@@ -30,6 +32,7 @@ class ResourceConfig:
         return strategy, resources, visualizers
 
     def _build_resources(self) -> dict[str, Resource]:
+        """Create the configured analyzer resources."""
         # ==================== USER CONFIG ====================
         # Declare the analyzers, their names, and their settings.
         return {
@@ -56,6 +59,7 @@ class ResourceConfig:
 
     @staticmethod
     def _resolve_price_chart_slots(resources: dict[str, Resource]):
+        """Assign chart slots to price chart resources."""
         timeframes = [
             resource
             for resource in resources.values()
@@ -72,6 +76,7 @@ class ResourceConfig:
                 resource.resolve_chart_slot(0)
 
     def _setup_resources(self, resources: dict[str, Resource]) -> list:
+        """Subscribe resources to their compatible data sources and collect visualizers."""
         visualizers = []
         resource_list = list(resources.values())
 
@@ -84,6 +89,7 @@ class ResourceConfig:
         return visualizers
 
     def _subscribe_to_source(self, current: Resource, previous_resources: list[Resource]):
+        """Subscribe a resource to the nearest compatible preceding resource."""
         for previous in reversed(previous_resources):
             if not hasattr(previous, "subscribe"):
                 continue

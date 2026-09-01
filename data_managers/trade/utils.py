@@ -4,6 +4,8 @@ from decimal import Decimal
 
 @dataclass(slots=True)
 class TradeMessage:
+    """Represents a single trade message."""
+    
     time: int
     price: Decimal
     quantity: Decimal

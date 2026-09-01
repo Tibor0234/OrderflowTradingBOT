@@ -3,7 +3,10 @@ from datetime import datetime
 from data_analysis.equity_curve.base import BaseEquityCurve
 
 class EquityCurveVisualizer:
+    """Visualizes an equity curve with starting and latest equity levels."""
+
     def __init__(self, equity_curve: BaseEquityCurve):
+        """Initialize the visualizer with the specified equity curve."""
         self.equity_curve = equity_curve
 
         self.scatter = go.Scattergl(
@@ -16,6 +19,7 @@ class EquityCurveVisualizer:
         )
 
     def get_traces(self):
+        """Return the equity curve trace."""
         timestamps = list(self.equity_curve.content.keys())
 
         if timestamps:
@@ -25,6 +29,7 @@ class EquityCurveVisualizer:
         return self.scatter
     
     def get_shapes(self):
+        """Return reference lines for starting and latest equity values."""
         shapes = []
 
         s_equity = self.equity_curve.starting_equity

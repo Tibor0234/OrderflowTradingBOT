@@ -1,6 +1,8 @@
 from enum import Enum
 
 class EventBusMsgType(Enum):
+    """Defines the event types supported by the event bus."""
+    
     SESSION_PAIR_START = 'session_pair_start'
     SESSION_PAIR_END = 'session_pair_end'
     PROCESS_END = 'process_end'
