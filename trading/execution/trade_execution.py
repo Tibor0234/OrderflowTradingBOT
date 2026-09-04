@@ -76,8 +76,9 @@ class TradeExecutionManager:
             self.trades.remove(trade)
             EventBus().emit(EventBusMsgType.TRADE_CLOSE, trade)
 
-            for st in self.position_manager.statistics:
-                st.update_on_trade_close(trade)
+            if not trade.is_shadow:
+                for st in self.position_manager.statistics:
+                    st.update_on_trade_close(trade)
 
         self.increase_orders[:] = [o for o in self.increase_orders if o.source_id != trade.id]
         self.stop_orders[:] = [o for o in self.stop_orders if o.source_id != trade.id]
@@ -116,7 +117,8 @@ class TradeExecutionManager:
         trade.update_metadata(stop_order.metadata)
         trade.charge_fee_from_value(fee_value, fee_rate)
         closed_value, realized = trade.close_trade_partial(execution_price, filled_close_rate)
-        self.position_manager.realized_balance += closed_value + realized
+        if not trade.is_shadow:
+            self.position_manager.realized_balance += closed_value + realized
 
         stop_order.close_rate -= filled_close_rate
         if stop_order.is_filled():

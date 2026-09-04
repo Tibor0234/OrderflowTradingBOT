@@ -15,14 +15,16 @@ class IncreaseOrder():
         self.entry_price = Decimal(entry_price) if entry_price is not None else None
         self.leverage = Decimal(leverage)
         self.metadata = dict(metadata) if metadata else {}
+        self.is_shadow = False
 
         self.fill_time = None
         self.kill_after_fill = kill_after_fill
 
-    def set_from_source(self, source_id: uuid.UUID, side: Side):
+    def set_from_source(self, source_id: uuid.UUID, side: Side, is_shadow: bool):
         """Set the source trade and order side."""
         self.source_id = source_id
         self.side = side
+        self.is_shadow = is_shadow
 
     def is_filled(self) -> bool:
         """Return whether the order has been fully filled."""

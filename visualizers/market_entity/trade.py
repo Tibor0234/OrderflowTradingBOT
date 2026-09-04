@@ -19,7 +19,7 @@ class TradeVisualizer(MarketEntityVisualizer):
         """Return horizontal price levels for executed trades."""
         shapes = []
 
-        for trade in self.trades:
+        for trade in self._exclude_shadow_entities(self.trades):
             entry = float(trade.execution_price)
             is_long = trade.side == Side.BUY
 
@@ -48,7 +48,7 @@ class TradeVisualizer(MarketEntityVisualizer):
 
         values = []
 
-        for trade in self.trades:
+        for trade in self._exclude_shadow_entities(self.trades):
             side = html.Span(
                 'LONG' if trade.side == Side.BUY else 'SHORT',
                 style={

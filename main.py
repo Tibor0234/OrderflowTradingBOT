@@ -168,7 +168,7 @@ if __name__ == "__main__":
         .set_session_counter(market_feed.session_counter)
     cumulative_report_generator = CumulativeReportGenerator(report_directory) \
         .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_report_visualizer)
-    trade_excel_exporter = TradeExcelExporter(report_directory) \
+    trade_excel_exporter = TradeExcelExporter(report_directory, config.get("export_shadow_trades", False)) \
         .set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----

@@ -19,6 +19,7 @@ class Order(ABC):
         kill: int = None,
         kill_after_fill: int = None,
         metadata: dict[str, object] | None = None,
+        is_shadow: bool = False,
     ):
         """Initialize the order with its execution parameters and lifetime settings."""
         self.id = uuid.uuid4()
@@ -28,6 +29,7 @@ class Order(ABC):
         self.value: Decimal = value
         self.leverage: Decimal = Decimal(leverage)
         self.metadata = dict(metadata) if metadata else {}
+        self.is_shadow = is_shadow
 
         # Kill timings
         self.kill: int | None = kill
@@ -66,7 +68,7 @@ class Order(ABC):
 
     def link(self, linked_order: IncreaseOrder | StopOrder):
         """Link an increase or stop order to this order."""
-        linked_order.set_from_source(self.id, self.side)
+        linked_order.set_from_source(self.id, self.side, self.is_shadow)
         return self
     
     def link_many(self, linked_orders: list[IncreaseOrder | StopOrder]):
@@ -88,19 +90,27 @@ class Order(ABC):
     
     def convert_to_increase_order(self) -> IncreaseLimitOrder:
         """Convert the order into an increase limit order."""
-        return IncreaseLimitOrder(self.value, self.entry_price, self.leverage, self.kill_after_fill, self.metadata)
+        increase_order = IncreaseLimitOrder(
+            self.value,
+            self.entry_price,
+            self.leverage,
+            self.kill_after_fill,
+            self.metadata,
+        )
+        increase_order.is_shadow = self.is_shadow
+        return increase_order
 
 
 class LimitOrder(Order):
     """Represents a limit order with a specified entry price."""
 
-    def __init__(self, side: Side, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill: int = None, kill_after_fill: int = None, metadata: dict[str, object] | None = None):
+    def __init__(self, side: Side, value: Decimal, entry_price: Decimal, leverage: float = 1.0, kill: int = None, kill_after_fill: int = None, metadata: dict[str, object] | None = None, is_shadow: bool = False):
         """Initialize a limit order."""
-        super().__init__(side=side, value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill=kill, kill_after_fill=kill_after_fill, metadata=metadata)
+        super().__init__(side=side, value=value, entry_price=entry_price, type=OrderType.LIMIT, leverage=leverage, kill=kill, kill_after_fill=kill_after_fill, metadata=metadata, is_shadow=is_shadow)
 
 class MarketOrder(Order):
     """Represents a market order executed at the available market price."""
 
-    def __init__(self, side: Side, value: Decimal, leverage: float = 1.0, metadata: dict[str, object] | None = None):
+    def __init__(self, side: Side, value: Decimal, leverage: float = 1.0, metadata: dict[str, object] | None = None, is_shadow: bool = False):
         """Initialize a market order."""
-        super().__init__(side=side, value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill=None, kill_after_fill=None, metadata=metadata)
+        super().__init__(side=side, value=value, entry_price=None, type=OrderType.MARKET, leverage=leverage, kill=None, kill_after_fill=None, metadata=metadata, is_shadow=is_shadow)

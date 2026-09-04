@@ -18,7 +18,7 @@ class OrderVisualizer(MarketEntityVisualizer):
         """Return horizontal price levels for active limit orders."""
         shapes = []
 
-        for order in self.orders + self.increase_orders:
+        for order in self._exclude_shadow_entities(self.orders + self.increase_orders):
             if order.type == OrderType.MARKET:
                 continue
 
@@ -53,7 +53,7 @@ class OrderVisualizer(MarketEntityVisualizer):
 
         values = []
 
-        for order in self.orders + self.increase_orders:
+        for order in self._exclude_shadow_entities(self.orders + self.increase_orders):
             if order.type == OrderType.MARKET:
                 continue
 

@@ -14,12 +14,13 @@ from trading.market_entities.utils import Side
 class TradeExcelExporter:
     """Exports closed trades to an Excel workbook grouped by session pair."""
 
-    HEADERS = ["Symbol", "Side", "Avg Entry Price", "Avg Close Price", "Invested Value (USD)", "Leverage", "Realized PnL (USD)", "Open Time", "Close Time", "Duration (s)"]
+    HEADERS = ["Symbol", "Is Shadow", "Side", "Avg Entry Price", "Avg Close Price", "Invested Value (USD)", "Leverage", "Realized PnL (USD)", "Open Time", "Close Time", "Duration (s)"]
     INVALID_SHEET_CHARS = str.maketrans({char: "-" for char in "\\/*?:[]"})
 
-    def __init__(self, report_directory: Path):
+    def __init__(self, report_directory: Path, export_shadow_trades: bool = False):
         """Initialize the exporter and subscribe to trade lifecycle events."""
         self.report_directory = report_directory
+        self.export_shadow_trades = export_shadow_trades
         self.session_counter = None
         self.session_trades: list[Trade] = []
 
@@ -37,7 +38,8 @@ class TradeExcelExporter:
 
     def _on_trade_close(self, trade: Trade):
         """Store a closed trade for the current session pair."""
-        self.session_trades.append(trade)
+        if self.export_shadow_trades or not trade.is_shadow:
+            self.session_trades.append(trade)
 
     def _on_session_pair_end(self):
         """Export the current session pair's trades to a dedicated worksheet."""
@@ -56,6 +58,7 @@ class TradeExcelExporter:
         for trade in self.session_trades:
             sheet.append([
                 symbol,
+                trade.is_shadow,
                 "BUY" if trade.side == Side.BUY else "SELL",
                 float(trade.execution_price),
                 float(trade.avg_close_price),

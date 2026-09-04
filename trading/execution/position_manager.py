@@ -46,12 +46,12 @@ class PositionManager:
     @property
     def floating_balance(self):
         """Return the combined unrealized PnL of active trades."""
-        return sum(t.floating_pnl for t in self.trades)
+        return sum(t.floating_pnl for t in self.trades if not t.is_shadow)
 
     @property
     def total_balance(self):
         """Return the current account equity including realized and unrealized PnL."""
-        locked_balance = sum(trade.value for trade in self.trades)
+        locked_balance = sum(trade.value for trade in self.trades if not trade.is_shadow)
         return self.realized_balance + locked_balance + self.floating_balance
 
     def _set_liquidation_order(self, trade: Trade):

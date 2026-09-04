@@ -13,7 +13,7 @@ class Trade:
     @classmethod
     def convert_from_order(cls, order: Order, execution_price, value) -> Trade:
         """Create a trade from an executed order."""
-        return cls(
+        trade = cls(
             id=order.id,
             execution_price=execution_price,
             side=order.side,
@@ -21,6 +21,8 @@ class Trade:
             leverage=order.leverage,
             metadata=order.metadata,
         )
+        trade.is_shadow = order.is_shadow
+        return trade
 
     def __init__(self, id: uuid.UUID, execution_price, side: Side, value, leverage, metadata: dict[str, object] | None = None):
         """Initialize the trade with its execution and position parameters."""
@@ -29,6 +31,7 @@ class Trade:
         self.side = side
         self.value = value
         self.metadata = dict(metadata) if metadata else {}
+        self.is_shadow = False
         self.invested_value = value
         self.closed_value = Decimal(0)
         self.avg_close_price = Decimal(0)
@@ -38,7 +41,7 @@ class Trade:
     
     def link(self, linked_order: IncreaseOrder | StopOrder):
         """Link an increase or stop order to this trade."""
-        linked_order.set_from_source(self.id, self.side)
+        linked_order.set_from_source(self.id, self.side, self.is_shadow)
         return self
     
     def link_many(self, linked_orders: list[IncreaseOrder | StopOrder]):

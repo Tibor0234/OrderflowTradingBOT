@@ -24,3 +24,6 @@ statistics:
   average_loss:            { dashboard: false, report: true }
   expectency:              { dashboard: true,  report: true }
   average_trade_duration:  { dashboard: true,  report: true }
+
+# Whether to export shadow trades to the trades.xlsx file.
+export_shadow_trades: false

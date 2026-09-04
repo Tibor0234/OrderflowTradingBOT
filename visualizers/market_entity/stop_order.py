@@ -13,7 +13,11 @@ class StopOrderVisualizer(MarketEntityVisualizer):
 
     def _visible_orders(self):
         """Return stop orders that are not liquidation orders."""
-        return [order for order in self.stop_orders if not isinstance(order, LiquidationOrder)]
+        return [
+            order
+            for order in self._exclude_shadow_entities(self.stop_orders)
+            if not isinstance(order, LiquidationOrder)
+        ]
 
     def get_shapes(self):
         """Return horizontal price levels for visible stop orders."""

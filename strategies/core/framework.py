@@ -39,7 +39,7 @@ class StrategyFramework(SequenceAnalyzers):
 
     # place orders
 
-    def place_limit_order(self, side, value, entry_price, leverage, kill=None, kill_after_fill=None, metadata=None):
+    def place_limit_order(self, side, value, entry_price, leverage, kill=None, kill_after_fill=None, metadata=None, is_shadow=False):
         """Create and place a limit order."""
         order = LimitOrder(
             side=Side(side),
@@ -48,18 +48,20 @@ class StrategyFramework(SequenceAnalyzers):
             leverage=leverage,
             kill=kill * 1000 if kill is not None else None,
             kill_after_fill=kill_after_fill * 1000 if kill_after_fill is not None else None,
-            metadata=metadata
+            metadata=metadata,
+            is_shadow=is_shadow,
         )
         self.position_manager.place_order(order)
         return order
     
-    def place_market_order(self, side, value, leverage, metadata=None):
+    def place_market_order(self, side, value, leverage, metadata=None, is_shadow=False):
         """Create and place a market order."""
         order = MarketOrder(
             side=Side(side),
             value=value,
             leverage=leverage,
-            metadata=metadata
+            metadata=metadata,
+            is_shadow=is_shadow,
         )
         self.position_manager.place_order(order)
         return order
@@ -152,7 +154,7 @@ class StrategyFramework(SequenceAnalyzers):
 
     def is_trade_open(self):
         """Return whether an active trade exists."""
-        return len(self.position_manager.trades) > 0
+        return any(not trade.is_shadow for trade in self.position_manager.trades)
     
     def is_order_pending(self):
         """Return whether there are any pending orders."""

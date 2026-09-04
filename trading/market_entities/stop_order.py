@@ -14,11 +14,13 @@ class StopOrder:
         self.price = Decimal(price) if price is not None else None
         self.close_rate = Decimal(close_rate)
         self.metadata = dict(metadata) if metadata else {}
+        self.is_shadow = False
 
-    def set_from_source(self, source_id: uuid.UUID, side: Side):
+    def set_from_source(self, source_id: uuid.UUID, side: Side, is_shadow: bool):
         """Set the source trade and derive the closing order side."""
         self.source_id = source_id
         self.side = side.opposite()
+        self.is_shadow = is_shadow
 
     def is_filled(self) -> bool:
         """Return whether the order has been fully executed."""
