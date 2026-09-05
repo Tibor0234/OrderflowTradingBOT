@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -15,10 +14,15 @@ class BaseReportGenerator:
         self.report_directory = report_directory
 
     @staticmethod
-    def create_report_directory(strategy_name: str) -> Path:
-        """Create and return a timestamped directory for a strategy report."""
-        started_at = datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d_%H-%M-%S")
-        report_directory = Path("reports") / f"{started_at}-{strategy_name}"
+    def create_report_directory(strategy_name: str, run_started_at: datetime) -> Path:
+        """Create and return the report directory for a strategy run."""
+        report_directory = (
+            Path("reports")
+            / f"strategy={strategy_name}"
+            / f"year={run_started_at.year:04d}"
+            / f"month={run_started_at.month:02d}"
+            / f"run_{run_started_at:%Y-%m-%dT%H-%M-%S}"
+        )
         report_directory.mkdir(parents=True, exist_ok=True)
         return report_directory
 

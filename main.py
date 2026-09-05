@@ -167,7 +167,10 @@ if __name__ == "__main__":
     # Reports
     reports_config = config.get("reports", {})
     if reports_config.get("enabled", True):
-        report_directory = BaseReportGenerator.create_report_directory(strategy.__class__.__name__)
+        report_directory = BaseReportGenerator.create_report_directory(
+            strategy.__class__.__name__,
+            run_started_at,
+        )
         session_pair_report_generator = SessionPairBasedReportGenerator(report_directory) \
             .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_report_visualizer) \
             .set_session_counter(market_feed.session_counter)
