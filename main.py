@@ -1,6 +1,7 @@
 import asyncio
 import threading
 from decimal import Decimal
+from datetime import datetime
 import os
 
 import dotenv
@@ -34,6 +35,7 @@ from report_generator.base import BaseReportGenerator
 from report_generator.cumulative import CumulativeReportGenerator
 from report_generator.session_pair_based import SessionPairBasedReportGenerator
 from report_generator.trade_export import TradeExcelExporter
+from ml.trade_export import MLTradeParquetExporter
 
 # ---- Visualization ----
 from dashboard.live_dashboard import LiveDashboard
@@ -58,6 +60,7 @@ if __name__ == "__main__":
     strategy, resources, visualizers = resource_config.get_essentials()
 
     dotenv.load_dotenv()
+    run_started_at = datetime.now()
 
     # ---- Dashboard ----
     dashboard = LiveDashboard('Trading dashboard')
@@ -162,14 +165,32 @@ if __name__ == "__main__":
             dashboard.add_context_chart_visualizer(visualizer)
 
     # Reports
-    report_directory = BaseReportGenerator.create_report_directory(strategy.__class__.__name__)
-    session_pair_report_generator = SessionPairBasedReportGenerator(report_directory) \
-        .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_report_visualizer) \
-        .set_session_counter(market_feed.session_counter)
-    cumulative_report_generator = CumulativeReportGenerator(report_directory) \
-        .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_report_visualizer)
-    trade_excel_exporter = TradeExcelExporter(report_directory, config.get("export_shadow_trades", False)) \
-        .set_session_counter(market_feed.session_counter)
+    reports_config = config.get("reports", {})
+    if reports_config.get("enabled", True):
+        report_directory = BaseReportGenerator.create_report_directory(strategy.__class__.__name__)
+        session_pair_report_generator = SessionPairBasedReportGenerator(report_directory) \
+            .set_visualizers(session_pair_equity_curve_visualizer, session_pair_statistics_report_visualizer) \
+            .set_session_counter(market_feed.session_counter)
+        cumulative_report_generator = CumulativeReportGenerator(report_directory) \
+            .set_visualizers(cumulative_equity_curve_visualizer, cumulative_statistics_report_visualizer)
+        trade_excel_exporter = TradeExcelExporter(
+            report_directory,
+            reports_config.get("export_shadow_trades", False),
+        ).set_session_counter(market_feed.session_counter)
+
+    # Machine-learning export
+    ml_export_config = config.get("ml_export", {})
+    if ml_export_config.get("enabled", False):
+        ml_data_directory = os.getenv("ML_DATA_DIRECTORY")
+        if not ml_data_directory:
+            raise ValueError("ML_DATA_DIRECTORY must be set when ML export is enabled.")
+
+        MLTradeParquetExporter(
+            output_directory=ml_data_directory,
+            schema_version=ml_export_config.get("schema_version", 1),
+            strategy_name=strategy.__class__.__name__,
+            run_started_at=run_started_at,
+        ).set_session_counter(market_feed.session_counter)
 
     # ---- Start market feed in background thread ----
     threading.Thread(

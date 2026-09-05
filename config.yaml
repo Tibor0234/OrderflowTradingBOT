@@ -25,5 +25,11 @@ statistics:
   expectency:              { dashboard: true,  report: true }
   average_trade_duration:  { dashboard: true,  report: true }
 
-# Whether to export shadow trades to the trades.xlsx file.
-export_shadow_trades: false
+# Report and machine learning export settings.
+reports:
+  enabled: true
+  export_shadow_trades: false
+
+ml_export:
+  enabled: true
+  schema_version: 1
